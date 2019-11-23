@@ -1,0 +1,26 @@
+CREATE TABLE tracks (
+id SERIAL NOT NULL PRIMARY KEY,
+owner_id bigint,
+user_id character varying,
+fp_hash character varying,
+page_url character varying,
+page_path character varying,
+page_referrer character varying,
+extra json,
+event character varying,
+ip character varying,
+page_title character varying,
+campaign_source character varying,
+campaign_medium character varying,
+campaign_name character varying,
+campaign_content character varying,
+received_at timestamp without time zone,
+sent_at timestamp without time zone
+);
+
+CREATE TABLE conversion_rules (
+id SERIAL NOT NULL PRIMARY KEY,
+owner_id bigint NOT NULL,
+attribute varchar NOT NULL,
+value varchar NOT NULL
+);
