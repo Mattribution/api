@@ -1,6 +1,6 @@
 CREATE TABLE tracks (
-id SERIAL NOT NULL PRIMARY KEY,
-owner_id bigint,
+id SERIAL PRIMARY KEY,
+owner_id integer,
 user_id character varying,
 fp_hash character varying,
 page_url character varying,

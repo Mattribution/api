@@ -1,8 +1,11 @@
 package api
 
+import "time"
+
 // Track is event tracking data in our format
 type Track struct {
 	ID              int       `json:"id"`
+	OwnerID         int64     `json:"ownerId"`
 	UserID          string    `json:"userId"`
 	FpHash          string    `json:"fpHash"`   // fingerprint hash
 	PageURL         string    `json:"pageURL"`  // optional (website specific)
@@ -20,9 +23,9 @@ type Track struct {
 }
 
 type TrackService interface {
-	Track(id int) (*Track, error)
-	CreateTrack(t *Track) error
-	DeleteTrack(id int) error
+	FindByID(id int) (Track, error)
+	StoreTrack(t Track) (int, error)
+	// DeleteTrack(id int) error
 }
 
 // // SegmentTrack is event tracking in Segment's format
