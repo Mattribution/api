@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/base64"
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
 
@@ -19,13 +20,31 @@ var gif = []byte{
 
 type Handler struct {
 	TrackService api.TrackService
+	KPIService   api.KPIService
 }
 
-func NewHandler(trackService api.TrackService) Handler {
+func NewHandler(trackService api.TrackService, kpiService api.KPIService) Handler {
 	return Handler{
 		TrackService: trackService,
+		KPIService:   kpiService,
 	}
 }
+
+// Serve http
+func (h *Handler) Serve(addr string) error {
+	// Setup mux
+	r := mux.NewRouter()
+	r.HandleFunc("/v1/pixel/track", h.NewTrack).Methods("GET")
+	r.HandleFunc("/v1/tracks/daily_visits", h.DailyVisits).Methods("GET")
+	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
+
+	r.HandleFunc("/v1/kpi", h.NewKPI).Methods("POST")
+	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
+}
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ Tracks
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 
 func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
@@ -58,10 +77,79 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	w.Write(gif)
 }
 
-// Serve http
-func (h *Handler) Serve(addr string) error {
-	// Setup mux
-	r := mux.NewRouter()
-	r.HandleFunc("/v1/pixel/track", h.NewTrack).Methods("GET")
-	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
+func (h *Handler) DailyVisits(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	dailyVisits, err := h.TrackService.GetCountsFromColumn(30, `date_trunc('day', tracks.received_at) "day"`, "tracks")
+	if err != nil {
+		panic(err)
+	}
+
+	// Marshall response
+	js, err := json.Marshal(dailyVisits)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	topPages, err := h.TrackService.GetTopValuesFromColumn(30, "page_title", "tracks")
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(topPages)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ KPIs
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+
+// NewKPI creates a new KPI
+func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
+	// Get KPI data
+	log.Println(r.Body)
+	decoder := json.NewDecoder(r.Body)
+	var kpi api.KPI
+	err := decoder.Decode(&kpi)
+	log.Printf("KPI: %v", kpi)
+	if err != nil {
+		http.Error(w, "Invalid KPI object delivered. Expected {column, value}", 400)
+		return
+	}
+
+	// TODO: validate the kpi data
+
+	// Store
+	_, err = h.KPIService.StoreKPI(kpi)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write gif back to client
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Success"))
 }

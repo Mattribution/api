@@ -18,6 +18,14 @@ received_at timestamp without time zone,
 sent_at timestamp without time zone
 );
 
+CREATE TABLE kpis (
+  id SERIAL PRIMARY KEY,
+  column_name varchar,
+  value varchar,
+  name varchar,
+  created_at timestamp
+);
+
 CREATE TABLE conversion_rules (
 id SERIAL NOT NULL PRIMARY KEY,
 owner_id bigint NOT NULL,
