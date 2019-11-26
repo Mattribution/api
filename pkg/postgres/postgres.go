@@ -229,7 +229,7 @@ func (s *KPIService) StoreKPI(kpi api.KPI) (int, error) {
 // FindByID finds all track objects by owner id
 func (s KPIService) FindByID(id int) (api.KPI, error) {
 	sqlStatement :=
-		`SELECT id, name, column_pattern, value from public.kpis
+		`SELECT id, name, column_name, value from public.kpis
 		WHERE id = $1`
 
 	var kpi api.KPI
