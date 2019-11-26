@@ -23,6 +23,10 @@ type KPIService struct {
 	DB *sql.DB
 }
 
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ Tacks
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+
 // NewTrackService Creates a new Trackservice object
 func NewTrackService(host, username, password, dbName string, port int) (*TrackService, error) {
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -76,9 +80,8 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 	row := s.DB.QueryRow(sqlStatement, id)
 	switch err := row.Scan(&t.ID, &t.UserID, &t.FpHash, &t.PageURL, &t.PagePath, &t.PageReferrer, &t.PageTitle, &t.Event, &t.CampaignSource, &t.CampaignMedium, &t.CampaignName, &t.CampaignContent, &t.SentAt, &t.Extra); err {
 	case sql.ErrNoRows:
-		log.Println("No rows were returned!")
+		return api.Track{}, errors.New("Not found")
 	case nil:
-		log.Printf("FOUND NIL: %v", t)
 	default:
 		panic(err)
 	}
@@ -153,26 +156,38 @@ func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api
 	return vCounts, nil
 }
 
-// // StoreKPI stores a new KPI object in the DB
-// func (s TrackService) StoreKPI(id int) (api.Track, error) {
-// 	sqlStatement :=
-// 		`SELECT id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, extra from public.tracks
-// 		WHERE id = $1`
+// GetDailyConversionCountForKPI looks through tracks to find daily conversion counts for a KPI
+func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCount, error) {
+	sqlStatement :=
+		fmt.Sprintf(`SELECT received_at, count(*) FROM tracks 
+	WHERE %s = $1
+	GROUP BY 1
+	ORDER BY 1 asc;`, kpi.Column)
 
-// 	var t api.Track
+	rows, err := s.DB.Query(sqlStatement, kpi.Value)
+	if err != nil {
+		// handle this error better than this
+		return nil, err
+	}
+	defer rows.Close()
 
-// 	row := s.DB.QueryRow(sqlStatement, id)
-// 	switch err := row.Scan(&t.ID, &t.UserID, &t.FpHash, &t.PageURL, &t.PagePath, &t.PageReferrer, &t.PageTitle, &t.Event, &t.CampaignSource, &t.CampaignMedium, &t.CampaignName, &t.CampaignContent, &t.SentAt, &t.Extra); err {
-// 	case sql.ErrNoRows:
-// 		log.Println("No rows were returned!")
-// 	case nil:
-// 		log.Printf("FOUND NIL: %v", t)
-// 	default:
-// 		panic(err)
-// 	}
+	vCounts := []api.ValueCount{}
+	for rows.Next() {
+		var vCount api.ValueCount
+		err = rows.Scan(&vCount.Value, &vCount.Count)
+		if err != nil {
+			// handle this error
+			return nil, err
+		}
+		vCounts = append(vCounts, vCount)
+	}
 
-// 	return t, nil
-// }
+	return vCounts, nil
+}
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ KPIs
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 
 // NewKPIService Creates a new KPIService object
 func NewKPIService(host, username, password, dbName string, port int) (*KPIService, error) {
@@ -209,4 +224,24 @@ func (s *KPIService) StoreKPI(kpi api.KPI) (int, error) {
 	}
 
 	return id, nil
+}
+
+// FindByID finds all track objects by owner id
+func (s KPIService) FindByID(id int) (api.KPI, error) {
+	sqlStatement :=
+		`SELECT id, name, column_pattern, value from public.kpis
+		WHERE id = $1`
+
+	var kpi api.KPI
+
+	row := s.DB.QueryRow(sqlStatement, id)
+	switch err := row.Scan(&kpi.ID, &kpi.Name, &kpi.Column, &kpi.Value); err {
+	case sql.ErrNoRows:
+		return api.KPI{}, errors.New("Not found")
+	case nil:
+	default:
+		panic(err)
+	}
+
+	return kpi, nil
 }

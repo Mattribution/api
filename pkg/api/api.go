@@ -23,6 +23,7 @@ type Track struct {
 }
 
 type KPI struct {
+	ID     int    `json:"id"`
 	Column string `json:"column"`
 	Value  string `json:"value"`
 	Name   string `json:"name"`
@@ -39,13 +40,15 @@ type ValueCount struct {
 }
 
 type TrackService interface {
+	StoreTrack(t Track) (int, error)
 	FindByID(id int) (Track, error)
 	GetTopValuesFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
-	StoreTrack(t Track) (int, error)
+	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)
 	// DeleteTrack(id int) error
 }
 
 type KPIService interface {
 	StoreKPI(kpi KPI) (int, error)
+	FindByID(id int) (KPI, error)
 }
