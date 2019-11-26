@@ -151,9 +151,17 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 		panic(err)
 	}
 
-	// Write gif back to client
+	kpi.ID = id
+
+	data, err := json.Marshal(kpi)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write data back to client
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(id))
+	w.Write(data)
 }
 
 func (h *Handler) KPIDailyConversionCount(w http.ResponseWriter, r *http.Request) {
