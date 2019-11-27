@@ -40,6 +40,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
 
 	r.HandleFunc("/v1/kpi", h.NewKPI).Methods("POST")
+	r.HandleFunc("/v1/kpi", h.KPIGetAll).Methods("GET")
 	r.HandleFunc("/v1/kpi/{kpi}", h.KPIGetOne).Methods("GET")
 	r.HandleFunc("/v1/kpi/{kpi}/daily_conversion_count", h.KPIDailyConversionCount).Methods("GET")
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
@@ -164,6 +165,27 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
+func (h *Handler) KPIGetAll(w http.ResponseWriter, r *http.Request) {
+	kpis, err := h.KPIService.Find()
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, "An error occurred", http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	jsonValue, err := json.Marshal(kpis)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonValue)
+}
+
 func (h *Handler) KPIGetOne(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
 	vars := mux.Vars(r)
@@ -182,7 +204,7 @@ func (h *Handler) KPIGetOne(w http.ResponseWriter, r *http.Request) {
 	kpi, err := h.KPIService.FindByID(kpiIDInt)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, "An error occurred", http.StatusInternalServerError)
 		return
 	}
 
@@ -196,7 +218,7 @@ func (h *Handler) KPIGetOne(w http.ResponseWriter, r *http.Request) {
 
 	// Write json back to client
 	w.Header().Set("Content-Type", "application/json")
-	// w.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonValue)
 }
 

@@ -102,7 +102,7 @@ func (s *TrackService) StoreTrack(t api.Track) (int, error) {
 // FindByID finds all track objects by owner id
 func (s TrackService) FindByID(id int) (api.Track, error) {
 	sqlStatement :=
-		`SELECT id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, extra from public.tracks
+		`SELECT * from public.tracks
 		WHERE id = $1`
 
 	var t api.Track
@@ -216,7 +216,7 @@ func (s *KPIService) StoreKPI(kpi api.KPI) (int, error) {
 // FindByID finds all track objects by owner id
 func (s KPIService) FindByID(id int) (api.KPI, error) {
 	sqlStatement :=
-		`SELECT id, name, column_name, value from public.kpis
+		`SELECT * FROM public.kpis
 		WHERE id = $1`
 
 	var kpi api.KPI
@@ -230,4 +230,19 @@ func (s KPIService) FindByID(id int) (api.KPI, error) {
 	}
 
 	return kpi, nil
+}
+
+// Find queries for all kpis (no filter)
+func (s KPIService) Find() ([]api.KPI, error) {
+	sqlStatement :=
+		`SELECT * FROM public.kpis`
+
+	var kpis []api.KPI
+	err := s.DB.Select(&kpis, sqlStatement)
+	if err != nil {
+		// handle this error better than this
+		return nil, err
+	}
+
+	return kpis, nil
 }

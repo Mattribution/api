@@ -24,10 +24,11 @@ type Track struct {
 }
 
 type KPI struct {
-	ID     int    `json:"id" db:"id"`
-	Column string `json:"column" db:"column_name"`
-	Value  string `json:"value" db:"value"`
-	Name   string `json:"name" db:"name"`
+	ID        int       `json:"id" db:"id"`
+	Column    string    `json:"column" db:"column_name"`
+	Value     string    `json:"value" db:"value"`
+	Name      string    `json:"name" db:"name"`
+	createdAt time.Time `db:"created_at"`
 }
 
 func (kpi KPI) IsValid() bool {
@@ -51,5 +52,6 @@ type TrackService interface {
 
 type KPIService interface {
 	StoreKPI(kpi KPI) (int, error)
+	Find() ([]KPI, error)
 	FindByID(id int) (KPI, error)
 }
