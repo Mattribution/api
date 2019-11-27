@@ -20,9 +20,9 @@ CREATE TABLE tracks (
 
 CREATE TABLE kpis (
   id SERIAL PRIMARY KEY,
-  column_name varchar,
-  value varchar,
-  name varchar,
+  column_name varchar NOT NULL,
+  value varchar NOT NULL,
+  name varchar NOT NULL,
   created_at timestamp
 );
 

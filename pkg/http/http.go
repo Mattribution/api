@@ -86,7 +86,7 @@ func (h *Handler) DailyVisits(w http.ResponseWriter, r *http.Request) {
 	// TODO: Auth and get info on what data to look at
 
 	// Query
-	dailyVisits, err := h.TrackService.GetCountsFromColumn(30, `date_trunc('day', tracks.received_at) "day"`, "tracks")
+	dailyVisits, err := h.TrackService.GetCountsFromColumn(30, `date_trunc('day', tracks.received_at)`, "tracks")
 	if err != nil {
 		panic(err)
 	}

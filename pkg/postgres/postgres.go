@@ -122,7 +122,7 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 // TODO: implement daily limit
 func (s TrackService) GetTopValuesFromColumn(days int, column, table string) ([]api.ValueCount, error) {
 	sqlStatement :=
-		fmt.Sprintf(`SELECT %s, count(*) count FROM %s
+		fmt.Sprintf(`SELECT %s as value, count(*) count FROM %s
 		GROUP BY 1
 		ORDER BY 2 DESC
 		LIMIT 10;`, column, table)
@@ -140,9 +140,10 @@ func (s TrackService) GetTopValuesFromColumn(days int, column, table string) ([]
 // GetCountsFromColumn will group a column and get the count of each unique value
 func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api.ValueCount, error) {
 	sqlStatement :=
-		fmt.Sprintf(`SELECT %s, count(*) count FROM %s
+		fmt.Sprintf(`SELECT %s as value, count(*) count FROM %s
 		GROUP BY 1
 		ORDER by 1 ASC`, column, table)
+	log.Println(sqlStatement)
 
 	vCounts := []api.ValueCount{}
 	err := s.DB.Select(&vCounts, sqlStatement)
