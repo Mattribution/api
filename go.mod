@@ -7,6 +7,7 @@ require (
 	github.com/gorilla/mux v1.7.3
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/jcmturner/gofork v1.0.0 // indirect
+	github.com/jmoiron/sqlx v1.2.0
 	github.com/lib/pq v1.2.0
 	github.com/prestodb/presto-go-client v0.0.0-20191112165915-2fd19c1637f4
 	golang.org/x/crypto v0.0.0-20191122220453-ac88ee75c92c // indirect

@@ -20,6 +20,6 @@ func main() {
 	}
 
 	httpHandler := http.NewHandler(trackService, kpiService)
-	log.Fatal(httpHandler.Serve(":3000"))
+	log.Fatal(httpHandler.Serve(":3001"))
 
 }

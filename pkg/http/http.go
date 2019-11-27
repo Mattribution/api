@@ -40,6 +40,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
 
 	r.HandleFunc("/v1/kpi", h.NewKPI).Methods("POST")
+	r.HandleFunc("/v1/kpi/{kpi}", h.KPIGetOne).Methods("GET")
 	r.HandleFunc("/v1/kpi/{kpi}/daily_conversion_count", h.KPIDailyConversionCount).Methods("GET")
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
 }
@@ -132,7 +133,6 @@ func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
 // NewKPI creates a new KPI
 func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 	// Get KPI data
-	log.Println(r.Body)
 	decoder := json.NewDecoder(r.Body)
 	var kpi api.KPI
 	err := decoder.Decode(&kpi)
@@ -162,6 +162,42 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 	// Write data back to client
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+func (h *Handler) KPIGetOne(w http.ResponseWriter, r *http.Request) {
+	// Get pixel data from client
+	vars := mux.Vars(r)
+	kpiIDString := vars["kpi"]
+	// Validate given kpi
+	if len(kpiIDString) == 0 {
+		http.Error(w, "Must specify kpi", 400)
+		return
+	}
+	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	if err != nil {
+		http.Error(w, "KPI ID must be a number", 400)
+		return
+	}
+
+	kpi, err := h.KPIService.FindByID(kpiIDInt)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	jsonValue, err := json.Marshal(kpi)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	// w.WriteHeader(http.StatusOK)
+	w.Write(jsonValue)
 }
 
 func (h *Handler) KPIDailyConversionCount(w http.ResponseWriter, r *http.Request) {

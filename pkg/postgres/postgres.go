@@ -7,20 +7,50 @@ import (
 	"log"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/mattribution/api/pkg/api"
 )
 
 const (
 	missingDataErr = "The payload is missing required data"
+	// For SQLx helper
+	schema = `
+	CREATE TABLE tracks (
+		id SERIAL PRIMARY KEY,
+		owner_id integer,
+		user_id character varying,
+		fp_hash character varying,
+		page_url character varying,
+		page_path character varying,
+		page_referrer character varying,
+		extra json,
+		event character varying,
+		ip character varying,
+		page_title character varying,
+		campaign_source character varying,
+		campaign_medium character varying,
+		campaign_name character varying,
+		campaign_content character varying,
+		received_at timestamp without time zone,
+		sent_at timestamp without time zone
+	);
+	
+	CREATE TABLE kpis (
+		id SERIAL PRIMARY KEY,
+		column_name varchar,
+		value varchar,
+		name varchar,
+		created_at timestamp
+	);`
 )
 
 type TrackService struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 type KPIService struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
@@ -32,7 +62,7 @@ func NewTrackService(host, username, password, dbName string, port int) (*TrackS
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, username, password, dbName)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		println(err)
 		return nil, err
@@ -50,8 +80,8 @@ func (s *TrackService) StoreTrack(t api.Track) (int, error) {
 
 	sqlStatement :=
 		`INSERT INTO public.tracks (owner_id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
-	VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
-	RETURNING id`
+		OUTPUT Inserted.ID
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
 	log.Println(sqlStatement)
 	// Set default json value (so postgres doesn't get mad)
@@ -77,8 +107,7 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 
 	var t api.Track
 
-	row := s.DB.QueryRow(sqlStatement, id)
-	switch err := row.Scan(&t.ID, &t.UserID, &t.FpHash, &t.PageURL, &t.PagePath, &t.PageReferrer, &t.PageTitle, &t.Event, &t.CampaignSource, &t.CampaignMedium, &t.CampaignName, &t.CampaignContent, &t.SentAt, &t.Extra); err {
+	switch err := s.DB.Get(&t, sqlStatement, id); err {
 	case sql.ErrNoRows:
 		return api.Track{}, errors.New("Not found")
 	case nil:
@@ -98,58 +127,27 @@ func (s TrackService) GetTopValuesFromColumn(days int, column, table string) ([]
 		ORDER BY 2 DESC
 		LIMIT 10;`, column, table)
 
-	rows, err := s.DB.Query(sqlStatement)
+	vCounts := []api.ValueCount{}
+	err := s.DB.Select(&vCounts, sqlStatement)
 	if err != nil {
 		// handle this error better than this
-		return nil, err
-	}
-	defer rows.Close()
-
-	vCounts := []api.ValueCount{}
-	for rows.Next() {
-		var vCount api.ValueCount
-		err = rows.Scan(&vCount.Value, &vCount.Count)
-		if err != nil {
-			// handle this error
-			return nil, err
-		}
-		vCounts = append(vCounts, vCount)
-	}
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
 		return nil, err
 	}
 
 	return vCounts, nil
 }
 
+// GetCountsFromColumn will group a column and get the count of each unique value
 func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api.ValueCount, error) {
 	sqlStatement :=
 		fmt.Sprintf(`SELECT %s, count(*) count FROM %s
 		GROUP BY 1
 		ORDER by 1 ASC`, column, table)
 
-	rows, err := s.DB.Query(sqlStatement)
+	vCounts := []api.ValueCount{}
+	err := s.DB.Select(&vCounts, sqlStatement)
 	if err != nil {
 		// handle this error better than this
-		return nil, err
-	}
-	defer rows.Close()
-
-	vCounts := []api.ValueCount{}
-	for rows.Next() {
-		var vCount api.ValueCount
-		err = rows.Scan(&vCount.Value, &vCount.Count)
-		if err != nil {
-			// handle this error
-			return nil, err
-		}
-		vCounts = append(vCounts, vCount)
-	}
-	// get any error encountered during iteration
-	err = rows.Err()
-	if err != nil {
 		return nil, err
 	}
 
@@ -164,22 +162,11 @@ func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCou
 	GROUP BY 1
 	ORDER BY 1 asc;`, kpi.Column)
 
-	rows, err := s.DB.Query(sqlStatement, kpi.Value)
+	vCounts := []api.ValueCount{}
+	err := s.DB.Select(&vCounts, sqlStatement)
 	if err != nil {
 		// handle this error better than this
 		return nil, err
-	}
-	defer rows.Close()
-
-	vCounts := []api.ValueCount{}
-	for rows.Next() {
-		var vCount api.ValueCount
-		err = rows.Scan(&vCount.Value, &vCount.Count)
-		if err != nil {
-			// handle this error
-			return nil, err
-		}
-		vCounts = append(vCounts, vCount)
 	}
 
 	return vCounts, nil
@@ -194,7 +181,7 @@ func NewKPIService(host, username, password, dbName string, port int) (*KPIServi
 	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
 		"password=%s dbname=%s sslmode=disable",
 		host, port, username, password, dbName)
-	db, err := sql.Open("postgres", psqlInfo)
+	db, err := sqlx.Open("postgres", psqlInfo)
 	if err != nil {
 		println(err)
 		return nil, err
@@ -234,13 +221,12 @@ func (s KPIService) FindByID(id int) (api.KPI, error) {
 
 	var kpi api.KPI
 
-	row := s.DB.QueryRow(sqlStatement, id)
-	switch err := row.Scan(&kpi.ID, &kpi.Name, &kpi.Column, &kpi.Value); err {
+	switch err := s.DB.Get(&kpi, sqlStatement, id); err {
 	case sql.ErrNoRows:
 		return api.KPI{}, errors.New("Not found")
 	case nil:
 	default:
-		panic(err)
+		return api.KPI{}, err
 	}
 
 	return kpi, nil

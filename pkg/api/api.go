@@ -4,29 +4,30 @@ import "time"
 
 // Track is event tracking data in our format
 type Track struct {
-	ID              int       `json:"id"`
-	OwnerID         int64     `json:"ownerId"`
-	UserID          string    `json:"userId"`
-	FpHash          string    `json:"fpHash"`   // fingerprint hash
-	PageURL         string    `json:"pageURL"`  // optional (website specific)
-	PagePath        string    `json:"pagePath"` // optional ()
-	PageTitle       string    `json:"pageTitle"`
-	PageReferrer    string    `json:"pageReferrer"`
-	Event           string    `json:"event"`
-	CampaignSource  string    `json:"campaignSource"`
-	CampaignMedium  string    `json:"campaignMedium"`
-	CampaignName    string    `json:"campaignName"`
-	CampaignContent string    `json:"campaignContent"`
-	SentAt          time.Time `json:"sentAt"`
-	IP              string
-	Extra           string `json:"extra"` // (optional) extra json
+	ID              int       `json:"id" db:"id"`
+	OwnerID         int64     `json:"ownerId" db:"owner_id"`
+	UserID          string    `json:"userId" db:"user_id"`
+	FpHash          string    `json:"fpHash" db:"fp_hash"`     // fingerprint hash
+	PageURL         string    `json:"pageURL" db:"page_url"`   // optional (website specific)
+	PagePath        string    `json:"pagePath" db:"page_path"` // optional ()
+	PageTitle       string    `json:"pageTitle" db:"page_title"`
+	PageReferrer    string    `json:"pageReferrer" db:"page_referrer"`
+	Event           string    `json:"event" db:"event"`
+	IP              string    `db:"sent_at"`
+	CampaignSource  string    `json:"campaignSource" db:"campaign_source"`
+	CampaignMedium  string    `json:"campaignMedium" db:"campaign_medium"`
+	CampaignName    string    `json:"campaignName" db:"campaign_name"`
+	CampaignContent string    `json:"campaignContent" db:"campaign_content"`
+	ReceivedAt      time.Time `db:"received_at"`
+	SentAt          time.Time `json:"sentAt" db:"sent_at"`
+	Extra           string    `json:"extra" db:"extra"` // (optional) extra json
 }
 
 type KPI struct {
-	ID     int    `json:"id"`
-	Column string `json:"column"`
-	Value  string `json:"value"`
-	Name   string `json:"name"`
+	ID     int    `json:"id" db:"id"`
+	Column string `json:"column" db:"column_name"`
+	Value  string `json:"value" db:"value"`
+	Name   string `json:"name" db:"name"`
 }
 
 func (kpi KPI) IsValid() bool {
