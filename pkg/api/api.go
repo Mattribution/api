@@ -13,12 +13,12 @@ type Track struct {
 	PageTitle       string    `json:"pageTitle" db:"page_title"`
 	PageReferrer    string    `json:"pageReferrer" db:"page_referrer"`
 	Event           string    `json:"event" db:"event"`
-	IP              string    `db:"sent_at"`
+	IP              string    `json:"-" db:"sent_at"`
 	CampaignSource  string    `json:"campaignSource" db:"campaign_source"`
 	CampaignMedium  string    `json:"campaignMedium" db:"campaign_medium"`
 	CampaignName    string    `json:"campaignName" db:"campaign_name"`
 	CampaignContent string    `json:"campaignContent" db:"campaign_content"`
-	ReceivedAt      time.Time `db:"received_at"`
+	ReceivedAt      time.Time `json:"-" db:"received_at"`
 	SentAt          time.Time `json:"sentAt" db:"sent_at"`
 	Extra           string    `json:"extra" db:"extra"` // (optional) extra json
 }
@@ -28,7 +28,7 @@ type KPI struct {
 	Column    string    `json:"column" db:"column_name"`
 	Value     string    `json:"value" db:"value"`
 	Name      string    `json:"name" db:"name"`
-	createdAt time.Time `db:"created_at"`
+	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
 func (kpi KPI) IsValid() bool {
@@ -42,7 +42,7 @@ type ValueCount struct {
 }
 
 type TrackService interface {
-	StoreTrack(t Track) (int, error)
+	Store(t Track) (int, error)
 	FindByID(id int) (Track, error)
 	GetTopValuesFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
@@ -51,7 +51,8 @@ type TrackService interface {
 }
 
 type KPIService interface {
-	StoreKPI(kpi KPI) (int, error)
+	Store(kpi KPI) (int, error)
 	Find() ([]KPI, error)
 	FindByID(id int) (KPI, error)
+	Delete(int) (int64, error)
 }

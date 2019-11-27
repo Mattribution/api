@@ -74,7 +74,7 @@ func NewTrackService(host, username, password, dbName string, port int) (*TrackS
 }
 
 // StoreTrack stores the track in the db
-func (s *TrackService) StoreTrack(t api.Track) (int, error) {
+func (s *TrackService) Store(t api.Track) (int, error) {
 	// sqlStatement := `INSERT INTO tracks (owner_id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
 	// VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
@@ -192,8 +192,8 @@ func NewKPIService(host, username, password, dbName string, port int) (*KPIServi
 	}, nil
 }
 
-// StoreKPI stores the track in the db
-func (s *KPIService) StoreKPI(kpi api.KPI) (int, error) {
+// Store stores the track in the db
+func (s *KPIService) Store(kpi api.KPI) (int, error) {
 	sqlStatement :=
 		`INSERT INTO public.kpis (column_name, value, name, created_at)
 	VALUES($1, $2, $3, $4)
@@ -245,4 +245,22 @@ func (s KPIService) Find() ([]api.KPI, error) {
 	}
 
 	return kpis, nil
+}
+
+// Delete removes a single KPI by id
+func (s KPIService) Delete(id int) (int64, error) {
+	sqlStatement :=
+		`DELETE FROM public.kpis WHERE id = $1`
+
+	// TODO: Get remove count from this?
+	res, err := s.DB.Exec(sqlStatement, id)
+	if err != nil {
+		return 0, err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
