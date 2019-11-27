@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -83,7 +82,6 @@ func (s *TrackService) Store(t api.Track) (int, error) {
 		OUTPUT Inserted.ID
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
 
-	log.Println(sqlStatement)
 	// Set default json value (so postgres doesn't get mad)
 	if t.Extra == "" {
 		t.Extra = "{}"
@@ -143,7 +141,6 @@ func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api
 		fmt.Sprintf(`SELECT %s as value, count(*) count FROM %s
 		GROUP BY 1
 		ORDER by 1 ASC`, column, table)
-	log.Println(sqlStatement)
 
 	vCounts := []api.ValueCount{}
 	err := s.DB.Select(&vCounts, sqlStatement)
