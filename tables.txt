@@ -20,15 +20,26 @@ CREATE TABLE tracks (
 
 CREATE TABLE kpis (
   id SERIAL PRIMARY KEY,
+  owner_id integer,
   column_name varchar NOT NULL,
   value varchar NOT NULL,
   name varchar NOT NULL,
   created_at timestamp
 );
 
+CREATE TABLE billing_events (
+  id SERIAL PRIMARY KEY,
+  owner_id integer,
+  user_id integer,
+  amount money
+)
+
+
+// This is no longer used at the moment, but will be used if users want multiple
+//   conversion cases for a kpi
 CREATE TABLE conversion_rules (
-id SERIAL NOT NULL PRIMARY KEY,
-owner_id bigint NOT NULL,
-attribute varchar NOT NULL,
-value varchar NOT NULL
+  id SERIAL NOT NULL PRIMARY KEY,
+  owner_id bigint NOT NULL,
+  attribute varchar NOT NULL,
+  value varchar NOT NULL
 );

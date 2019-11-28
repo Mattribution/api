@@ -52,6 +52,10 @@ type KPIService struct {
 	DB *sqlx.DB
 }
 
+type BillingEventService struct {
+	DB *sqlx.DB
+}
+
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 // =~ Tacks
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
@@ -72,7 +76,7 @@ func NewTrackService(host, username, password, dbName string, port int) (*TrackS
 	}, nil
 }
 
-// StoreTrack stores the track in the db
+// Store stores the track in the db
 func (s *TrackService) Store(t api.Track) (int, error) {
 	// sqlStatement := `INSERT INTO tracks (owner_id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
 	// VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
@@ -155,13 +159,13 @@ func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api
 // GetDailyConversionCountForKPI looks through tracks to find daily conversion counts for a KPI
 func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCount, error) {
 	sqlStatement :=
-		fmt.Sprintf(`SELECT received_at, count(*) FROM tracks 
+		fmt.Sprintf(`SELECT received_at as value, count(*) FROM tracks 
 	WHERE %s = $1
 	GROUP BY 1
 	ORDER BY 1 asc;`, kpi.Column)
 
 	vCounts := []api.ValueCount{}
-	err := s.DB.Select(&vCounts, sqlStatement)
+	err := s.DB.Select(&vCounts, sqlStatement, kpi.Value)
 	if err != nil {
 		// handle this error better than this
 		return nil, err
@@ -261,4 +265,59 @@ func (s KPIService) Delete(id int) (int64, error) {
 	}
 
 	return count, nil
+}
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ BillingEvents
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+
+// NewBillingEventService Creates a new BillingEventService object
+func NewBillingEventService(host, username, password, dbName string, port int) (*BillingEventService, error) {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, username, password, dbName)
+	db, err := sqlx.Open("postgres", psqlInfo)
+	if err != nil {
+		println(err)
+		return nil, err
+	}
+
+	return &BillingEventService{
+		db,
+	}, nil
+}
+
+// Store stores the track in the db
+func (s *BillingEventService) Store(billingEvent api.BillingEvent) (int, error) {
+	sqlStatement :=
+		`INSERT INTO public.billing_events (user_id, amount, created_at)
+	VALUES($1, $2, $3)
+	RETURNING id`
+
+	id := 0
+	err := s.DB.QueryRow(sqlStatement, billingEvent.UserID, billingEvent.Amount, time.Now().Format(time.RFC3339)).Scan(&id)
+	if err != nil {
+		return id, err
+	}
+
+	return id, nil
+}
+
+// FindByUserID finds all billing events by user_id
+func (s BillingEventService) FindByUserID(userID int) (api.BillingEvent, error) {
+	sqlStatement :=
+		`SELECT * FROM public.billing_events
+		WHERE user_id = $1`
+
+	var billingEvent api.BillingEvent
+
+	switch err := s.DB.Get(&billingEvent, sqlStatement, userID); err {
+	case sql.ErrNoRows:
+		return api.BillingEvent{}, errors.New("Not found")
+	case nil:
+	default:
+		return api.BillingEvent{}, err
+	}
+
+	return billingEvent, nil
 }

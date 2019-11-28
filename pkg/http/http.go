@@ -44,6 +44,10 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/kpis/{kpi}", h.KPIGetOne).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}", h.KPIDelete).Methods("DELETE")
 	r.HandleFunc("/v1/kpis/{kpi}/daily_conversion_count", h.KPIDailyConversionCount).Methods("GET")
+
+	// r.HandleFunc("/v1/billing_events", h.NewKPI).Methods("POST")
+	// r.HandleFunc("/v1/kpis/by_user_id", h.KPIGetAll).Methods("GET")
+
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
 }
 
@@ -302,3 +306,7 @@ func (h *Handler) KPIDailyConversionCount(w http.ResponseWriter, r *http.Request
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ BillingEvents
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~

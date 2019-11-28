@@ -25,9 +25,18 @@ type Track struct {
 
 type KPI struct {
 	ID        int       `json:"id" db:"id"`
+	OwnerID   int       `json:"-" db:"owner_id"`
 	Column    string    `json:"column" db:"column_name"`
 	Value     string    `json:"value" db:"value"`
 	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"-" db:"created_at"`
+}
+
+type BillingEvent struct {
+	ID        int       `json:"id" db:"id"`
+	OwnerID   int       `json:"-" db:"owner_id"`
+	UserID    int       `json:"userId" db:"user_id"`
+	Amount    float32   `json:"amount" db:"amount"`
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
@@ -55,4 +64,9 @@ type KPIService interface {
 	Find() ([]KPI, error)
 	FindByID(id int) (KPI, error)
 	Delete(int) (int64, error)
+}
+
+type BillingEventService interface {
+	Store(billingEvent BillingEvent) (int, error)
+	FindByUserID(id int) (BillingEvent, error)
 }
