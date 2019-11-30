@@ -49,11 +49,11 @@ func main() {
 	)
 	// Random google ads referrer
 	randBlogPostReferrer := wr.NewChooser(
-		wr.Choice{Item: "https://mattribution.com/blog/posts/1", Weight: 2},
-		wr.Choice{Item: "https://mattribution.com/blog/posts/2", Weight: 4},
-		wr.Choice{Item: "https://mattribution.com/blog/posts/3", Weight: 8},
-		wr.Choice{Item: "https://mattribution.com/blog/posts/4", Weight: 10},
-		wr.Choice{Item: "https://mattribution.com/blog/posts/5", Weight: 24},
+		wr.Choice{Item: "https://mattribution.com/blog/posts/1", Weight: 1},
+		wr.Choice{Item: "https://mattribution.com/blog/posts/2", Weight: 1},
+		wr.Choice{Item: "https://mattribution.com/blog/posts/3", Weight: 2},
+		wr.Choice{Item: "https://mattribution.com/blog/posts/4", Weight: 4},
+		wr.Choice{Item: "https://mattribution.com/blog/posts/5", Weight: 2},
 	)
 	// Random generator for funnel
 	randFunnelTrack := wr.NewChooser(
@@ -68,7 +68,7 @@ func main() {
 			CampaignMedium:  "banner",
 			CampaignName:    "Paid Ads",
 			CampaignContent: "Image of marketing connected by us",
-		}, Weight: 10},
+		}, Weight: 1},
 		wr.Choice{Item: api.Track{
 			OwnerID:         ownerID,
 			PageURL:         baseURL + "/solutions",
@@ -80,7 +80,7 @@ func main() {
 			CampaignMedium:  "paid search",
 			CampaignName:    "Paid Search",
 			CampaignContent: "Link to our home page",
-		}, Weight: 5},
+		}, Weight: 2},
 		wr.Choice{Item: api.Track{
 			OwnerID:         ownerID,
 			PageURL:         baseURL + "/get-started",
@@ -92,7 +92,7 @@ func main() {
 			CampaignMedium:  "blog",
 			CampaignName:    "Content Marketing",
 			CampaignContent: "Blog posts about our technology",
-		}, Weight: 20},
+		}, Weight: 5},
 		wr.Choice{Item: api.Track{
 			OwnerID:         ownerID,
 			PageURL:         baseURL,
@@ -111,16 +111,40 @@ func main() {
 	randGeneralTrack := wr.NewChooser(
 		wr.Choice{Item: api.Track{
 			OwnerID:         ownerID,
-			PageURL:         baseURL,
-			PagePath:        "/",
-			PageTitle:       "Home",
-			PageReferrer:    "https://twitter.com",
+			PageURL:         baseURL + "/about",
+			PagePath:        "/about",
+			PageTitle:       "About",
+			PageReferrer:    "",
 			Event:           "key_page_view",
-			CampaignSource:  "Twitter",
-			CampaignMedium:  "twitter",
-			CampaignName:    "Social Media Presence",
-			CampaignContent: "Tweets about our software",
-		}, Weight: 8},
+			CampaignSource:  "",
+			CampaignMedium:  "",
+			CampaignName:    "",
+			CampaignContent: "",
+		}, Weight: 2},
+		wr.Choice{Item: api.Track{
+			OwnerID:         ownerID,
+			PageURL:         baseURL + "/how-it-works",
+			PagePath:        "/how-it-works",
+			PageTitle:       "How It Works",
+			PageReferrer:    "",
+			Event:           "key_page_view",
+			CampaignSource:  "",
+			CampaignMedium:  "",
+			CampaignName:    "",
+			CampaignContent: "",
+		}, Weight: 2},
+		wr.Choice{Item: api.Track{
+			OwnerID:         ownerID,
+			PageURL:         baseURL + "/pricing",
+			PagePath:        "/pricing",
+			PageTitle:       "Pricing",
+			PageReferrer:    "",
+			Event:           "key_page_view",
+			CampaignSource:  "",
+			CampaignMedium:  "",
+			CampaignName:    "",
+			CampaignContent: "",
+		}, Weight: 2},
 	)
 
 	// Loop over fake user IDs and create paths for them
