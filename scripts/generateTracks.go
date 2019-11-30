@@ -154,6 +154,8 @@ func main() {
 			for i := 0; i < rand.Intn(20); i++ {
 				genTrack := randGeneralTrack.Pick().(api.Track)
 				genTrack.UserID = strconv.Itoa(userID)
+				genTrack.SentAt = date
+				genTrack.ReceivedAt = date
 				storeTrack(db, genTrack)
 
 				// Add to date (minutes) after every track to simulate user reading
@@ -173,6 +175,8 @@ func main() {
 		}
 
 		// If we got here we haven't converted, so convert
+		convertTrack.SentAt = date
+		convertTrack.ReceivedAt = date
 		storeTrack(db, convertTrack)
 
 		bar.Increment()
