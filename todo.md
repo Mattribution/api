@@ -12,3 +12,13 @@ Ask Jordan - how can I allow users to inject their own data sources into Presto?
 
 ## Allow adding catalogs at runtime
 We need to be able to add read presto DBs at runtime for tracks and billing
+
+## Queries
+- MostActiveCampaigns  
+Finds the campaign names with most activity in general  
+`select campaign_name, count(*) count from tracks group by 1 order by 2 desc;`
+- MostActiveMediums
+Finds the mediums with most activity
+- MostEffectiveCampaigns  
+Finds the campaigns with the most conversions  
+- 
