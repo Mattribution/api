@@ -113,7 +113,7 @@ func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
 	// TODO: Auth and get info on what data to look at
 
 	// Query
-	topPages, err := h.TrackService.GetTopValuesFromColumn(30, "page_title", "tracks")
+	topPages, err := h.TrackService.GetTopValuesFromColumn(30, "page_title", "tracks", "")
 	if err != nil {
 		log.Printf("ERORR: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -137,7 +137,7 @@ func (h *Handler) MostActiveCampaigns(w http.ResponseWriter, r *http.Request) {
 	// TODO: Auth and get info on what data to look at
 
 	// Query
-	activeCampaigns, err := h.TrackService.GetTopValuesFromColumn(30, "campaign_name", "tracks")
+	activeCampaigns, err := h.TrackService.GetTopValuesFromColumn(30, "campaign_name", "tracks", `WHERE campaign_name <> ''`)
 	if err != nil {
 		log.Printf("ERORR: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)

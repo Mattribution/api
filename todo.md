@@ -13,7 +13,7 @@ Ask Online - how can I allow users to inject their own data sources into Presto?
 ## Allow adding catalogs at runtime
 We need to be able to add read presto DBs at runtime for tracks and billing
 
-## Queries
+## API
 - MostActiveCampaigns  
 Finds the campaign names with most activity in general  
 `select campaign_name, count(*) count from tracks group by 1 order by 2 desc;`
@@ -22,3 +22,7 @@ Finds the mediums with most activity
 `select campaign_name, count(*) count from tracks group by 1 order by 2 desc;`
 - FirstTouch  
 Attributes conversions via first touch. This needs to find conversions, then get the first relevant touch point for the journey.
+
+## Website
+- Allow KPI add and removal  
+Add UI for the user to add and remove KPIs

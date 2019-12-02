@@ -29,6 +29,7 @@ type KPI struct {
 	Column    string    `json:"column" db:"column_name"`
 	Value     string    `json:"value" db:"value"`
 	Name      string    `json:"name" db:"name"`
+	Target    int       `json:"target" db:"target"`
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
@@ -53,7 +54,7 @@ type ValueCount struct {
 type TrackService interface {
 	Store(t Track) (int, error)
 	FindByID(id int) (Track, error)
-	GetTopValuesFromColumn(days int, column, table string) ([]ValueCount, error)
+	GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)
 	// DeleteTrack(id int) error

@@ -13,6 +13,7 @@ import (
 
 const (
 	missingDataErr = "The payload is missing required data"
+	mockOwnerID    = 1
 	// For SQLx helper
 	schema = `
 	CREATE TABLE tracks (
@@ -122,12 +123,13 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 
 // GetTopValuesFromColumn gets a theGetTopValuesFromColumn top values from a column along with their counts
 // TODO: implement daily limit
-func (s TrackService) GetTopValuesFromColumn(days int, column, table string) ([]api.ValueCount, error) {
+func (s TrackService) GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]api.ValueCount, error) {
 	sqlStatement :=
 		fmt.Sprintf(`SELECT %s as value, count(*) count FROM %s
+		%s
 		GROUP BY 1
 		ORDER BY 2 DESC
-		LIMIT 10;`, column, table)
+		LIMIT 10;`, column, table, extraWheres)
 
 	vCounts := []api.ValueCount{}
 	err := s.DB.Select(&vCounts, sqlStatement)
@@ -159,7 +161,7 @@ func (s TrackService) GetCountsFromColumn(days int, column, table string) ([]api
 // GetDailyConversionCountForKPI looks through tracks to find daily conversion counts for a KPI
 func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCount, error) {
 	sqlStatement :=
-		fmt.Sprintf(`SELECT received_at as value, count(*) FROM tracks 
+		fmt.Sprintf(`SELECT date_trunc('day', received_at) as value, count(*) FROM tracks 
 	WHERE %s = $1
 	GROUP BY 1
 	ORDER BY 1 asc;`, kpi.Column)
@@ -196,9 +198,12 @@ func NewKPIService(host, username, password, dbName string, port int) (*KPIServi
 
 // Store stores the track in the db
 func (s *KPIService) Store(kpi api.KPI) (int, error) {
+	// TODO
+	kpi.OwnerID = mockOwnerID
+
 	sqlStatement :=
-		`INSERT INTO public.kpis (column_name, value, name, created_at)
-	VALUES($1, $2, $3, $4)
+		`INSERT INTO public.kpis (column_name, value, name, owner_id, target, created_at)
+	VALUES($1, $2, $3, $4, $5, $6)
 	RETURNING id`
 
 	if !kpi.IsValid() {
@@ -207,7 +212,7 @@ func (s *KPIService) Store(kpi api.KPI) (int, error) {
 
 	id := 0
 	// err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.FpHash, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, sentAt, sentAt, t.Extra).Scan(&id)
-	err := s.DB.QueryRow(sqlStatement, kpi.Column, kpi.Value, kpi.Name, time.Now().Format(time.RFC3339)).Scan(&id)
+	err := s.DB.QueryRow(sqlStatement, kpi.Column, kpi.Value, kpi.Name, kpi.OwnerID, kpi.Target, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		return id, err
 	}
@@ -239,10 +244,9 @@ func (s KPIService) Find() ([]api.KPI, error) {
 	sqlStatement :=
 		`SELECT * FROM public.kpis`
 
-	var kpis []api.KPI
+	kpis := []api.KPI{}
 	err := s.DB.Select(&kpis, sqlStatement)
 	if err != nil {
-		// handle this error better than this
 		return nil, err
 	}
 

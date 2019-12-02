@@ -1,2 +1,2 @@
-curl -X POST -H "Content-Type: application/json" -d '{"name": "Signup", "column": "event", "value": "signup"}' localhost:3001/v1/kpi
+curl -X POST -H "Content-Type: application/json" -d '{"name": "Signup", "column": "event", "value": "signup", "target": 100}' localhost:3001/v1/kpis
 
