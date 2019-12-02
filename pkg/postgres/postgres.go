@@ -269,6 +269,7 @@ func (s KPIService) Delete(id int) (int64, error) {
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 // =~ BillingEvents
+// =~ Note: this section may be removed
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 
 // NewBillingEventService Creates a new BillingEventService object

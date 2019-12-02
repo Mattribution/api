@@ -8,7 +8,7 @@ I need to perform a query to apply a marketing attribution rule. In my mind this
 - ETL
 
 ## Multiple users
-Ask Jordan - how can I allow users to inject their own data sources into Presto? Catalogs? Is that secure?
+Ask Online - how can I allow users to inject their own data sources into Presto? Catalogs? Is that secure?
 
 ## Allow adding catalogs at runtime
 We need to be able to add read presto DBs at runtime for tracks and billing
@@ -19,6 +19,6 @@ Finds the campaign names with most activity in general
 `select campaign_name, count(*) count from tracks group by 1 order by 2 desc;`
 - MostActiveMediums
 Finds the mediums with most activity
-- MostEffectiveCampaigns  
-Finds the campaigns with the most conversions  
-- 
+`select campaign_name, count(*) count from tracks group by 1 order by 2 desc;`
+- FirstTouch  
+Attributes conversions via first touch. This needs to find conversions, then get the first relevant touch point for the journey.

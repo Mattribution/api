@@ -38,6 +38,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/pixel/track", h.NewTrack).Methods("GET")
 	r.HandleFunc("/v1/tracks/daily_visits", h.DailyVisits).Methods("GET")
 	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
+	r.HandleFunc("/v1/tracks/most_active_campaigns", h.MostActiveCampaigns).Methods("GET")
 
 	r.HandleFunc("/v1/kpis", h.NewKPI).Methods("POST")
 	r.HandleFunc("/v1/kpis", h.KPIGetAll).Methods("GET")
@@ -121,6 +122,30 @@ func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
 
 	// Marshall response
 	js, err := json.Marshal(topPages)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h *Handler) MostActiveCampaigns(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	activeCampaigns, err := h.TrackService.GetTopValuesFromColumn(30, "campaign_name", "tracks")
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(activeCampaigns)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
