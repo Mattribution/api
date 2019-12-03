@@ -27,6 +27,10 @@ CREATE TABLE kpis (
   created_at timestamp
 );
 
+CREATE TABLE data_sources (
+  
+)
+
 CREATE TABLE billing_events (
   id SERIAL PRIMARY KEY,
   owner_id integer,
