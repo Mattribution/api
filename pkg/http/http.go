@@ -3,7 +3,6 @@ package http
 import (
 	"net/http"
 
-	"github.com/gorilla/context"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/mattribution/api/pkg/api"
@@ -32,32 +31,14 @@ func NewHandler(trackService api.TrackService, kpiService api.KPIService) Handle
 	}
 }
 
-func authMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		token := r.Header.Get("X-Session-Token")
-		// TODO: Repace with actual auth
-		if token == mockToken {
-			// Fetch their data connections
-
-			// Pass down the request to the next middleware (or final handler)
-			next.ServeHTTP(w, r)
-		} else {
-			// Write an error and stop the handler chain
-			http.Error(w, "Forbidden", http.StatusForbidden)
-		}
-		// Middleware operations
-		// Parse body/get token.
-		context.Set(r, "token", token)
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 // Serve http
-func Serve(addr string) error {
+func (h Handler) Serve(addr string) error {
+	// Setup auth middleware
+	amw := newAuthMiddleware(h)
+
 	// Setup mux
 	r := mux.NewRouter()
-	r.Use(authMiddleware)
+	r.Use(amw.Middleware)
 
 	r.HandleFunc("/v1/pixel/track", NewTrack).Methods("GET")
 	r.HandleFunc("/v1/tracks/daily_visits", DailyVisits).Methods("GET")
