@@ -1,6 +1,7 @@
 package http
 
 import (
+	"log"
 	"net/http"
 
 	"github.com/gorilla/handlers"
@@ -15,20 +16,61 @@ var gif = []byte{
 }
 
 var (
-	mockToken  = "mock-token"
-	mockUserID = 1
+	mockToken      = "mock-token"
+	mockUserID     = 1
+	mocktokenUsers = map[string]int{
+		"000000": 1,
+	}
 )
 
-type Handler struct {
+type DataHandler struct {
+	UserService  api.UserService
 	TrackService api.TrackService
 	KPIService   api.KPIService
 }
 
-func NewHandler(trackService api.TrackService, kpiService api.KPIService) Handler {
-	return Handler{
+func DataHandler(userService api.UserService, trackService api.TrackService, kpiService api.KPIService) Handler {
+	return DataHandler{
+		UserService:  userService,
 		TrackService: trackService,
 		KPIService:   kpiService,
 	}
+}
+
+// Middleware function, which will be called for each request
+func (dh DataHandler) Middleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		token := r.Header.Get("X-Session-Token")
+
+		if userID, found := mocktokenUsers[token]; found {
+			// We found the token in our map
+			log.Printf("Authenticated user %s\n", user)
+
+			user, err := dh.UserService.FindByID(userID)
+			if err != nil {
+				http.Error(w, "Server error", http.StatusInternalServerError)
+				return
+			}
+
+			// If the user has an active custom presto data store,
+			if user.PrestoDataStoreID != nil {
+
+			}
+
+			// TODO:
+			// Find the user's data sources
+			// if contains presto replacement
+			//   replace presto service
+			//
+			// ENDTODO:
+
+			// Pass down the request to the next middleware (or final handler)
+			next.ServeHTTP(w, r)
+		} else {
+			// Write an error and stop the handler chain
+			http.Error(w, "Forbidden", http.StatusForbidden)
+		}
+	})
 }
 
 // Serve http

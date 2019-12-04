@@ -2,6 +2,12 @@ package api
 
 import "time"
 
+type User struct {
+	ID int `json:"id" db:"id"`
+	// Can be null
+	PrestoDataStoreID *int `json:"prestoDataStoreId" db:"presto_data_store_id"`
+}
+
 // Track is event tracking data in our format
 type Track struct {
 	ID              int       `json:"id" db:"id"`
@@ -70,4 +76,8 @@ type KPIService interface {
 type BillingEventService interface {
 	Store(billingEvent BillingEvent) (int, error)
 	FindByUserID(id int) (BillingEvent, error)
+}
+
+type UserService interface {
+	FindByID(id int) (User, error)
 }

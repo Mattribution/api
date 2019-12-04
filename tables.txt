@@ -1,3 +1,8 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  presto_data_store_id integer
+);
+
 CREATE TABLE tracks (
   id SERIAL PRIMARY KEY,
   owner_id integer,
@@ -28,8 +33,9 @@ CREATE TABLE kpis (
 );
 
 CREATE TABLE data_sources (
-  
-)
+  type varchar,
+  conn_str varchar
+);
 
 CREATE TABLE billing_events (
   id SERIAL PRIMARY KEY,
