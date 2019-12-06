@@ -79,7 +79,7 @@ func NewTrackService(host, username, password, dbName string, port int) (*TrackS
 
 // Store stores the track in the db
 func (s *TrackService) Store(t api.Track) (int, error) {
-	// sqlStatement := `INSERT INTO tracks (owner_id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
+	// sqlStatement := `INSERT INTO tracks (owner_id, user_id, anonymous_id, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
 	// VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
 
 	sqlStatement :=
@@ -93,8 +93,7 @@ func (s *TrackService) Store(t api.Track) (int, error) {
 	}
 
 	id := 0
-	// err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.FpHash, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, sentAt, sentAt, t.Extra).Scan(&id)
-	err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.FpHash, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, t.SentAt.Format(time.RFC3339), time.Now().Format(time.RFC3339), t.Extra).Scan(&id)
+	err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.AnonymousID, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, t.SentAt.Format(time.RFC3339), time.Now().Format(time.RFC3339), t.Extra).Scan(&id)
 	if err != nil {
 		return id, err
 	}
@@ -169,7 +168,34 @@ func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCou
 	vCounts := []api.ValueCount{}
 	err := s.DB.Select(&vCounts, sqlStatement, kpi.Value)
 	if err != nil {
-		// handle this error better than this
+		return nil, err
+	}
+
+	return vCounts, nil
+}
+
+func (s TrackService) GetFirstTouchForKPI(kpi api.KPI) ([]api.ValueCount, error) {
+	sqlStatement := fmt.Sprintf(`
+	SELECT campaign_name as value, count(*) as count
+	FROM tracks t
+	WHERE EXISTS (
+		SELECT 1 
+		FROM tracks t2
+		WHERE t2.%s = $1
+		AND t.anonymous_id = t2.anonymous_id
+	)
+	AND NOT EXISTS (
+		SELECT * 
+		FROM tracks t2
+		WHERE t.anonymous_id = t2.anonymous_id
+		AND t2.received_at < t.received_at
+	)
+	GROUP BY 1
+	ORDER BY 2 DESC;`, kpi.Column)
+
+	vCounts := []api.ValueCount{}
+	err := s.DB.Select(&vCounts, sqlStatement, kpi.Value)
+	if err != nil {
 		return nil, err
 	}
 
@@ -211,7 +237,6 @@ func (s *KPIService) Store(kpi api.KPI) (int, error) {
 	}
 
 	id := 0
-	// err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.FpHash, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, sentAt, sentAt, t.Extra).Scan(&id)
 	err := s.DB.QueryRow(sqlStatement, kpi.Column, kpi.Value, kpi.Name, kpi.OwnerID, kpi.Target, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		return id, err

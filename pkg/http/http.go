@@ -45,6 +45,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/kpis/{kpi}", h.KPIGetOne).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}", h.KPIDelete).Methods("DELETE")
 	r.HandleFunc("/v1/kpis/{kpi}/daily_conversion_count", h.KPIDailyConversionCount).Methods("GET")
+	r.HandleFunc("/v1/kpis/{kpi}/first_touch", h.KPIFirstTouch).Methods("GET")
 
 	// r.HandleFunc("/v1/billing_events", h.NewKPI).Methods("POST")
 	// r.HandleFunc("/v1/kpis/by_user_id", h.KPIGetAll).Methods("GET")
@@ -324,6 +325,49 @@ func (h *Handler) KPIDailyConversionCount(w http.ResponseWriter, r *http.Request
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h *Handler) KPIFirstTouch(w http.ResponseWriter, r *http.Request) {
+	// Get pixel data from client
+	vars := mux.Vars(r)
+	kpiIDString := vars["kpi"]
+
+	// Validate given kpi
+	if len(kpiIDString) == 0 {
+		http.Error(w, "Must specify kpi", 400)
+		return
+	}
+	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	if err != nil {
+		http.Error(w, "KPI ID must be a number", 400)
+		return
+	}
+
+	kpi, err := h.KPIService.FindByID(kpiIDInt)
+	if err != nil {
+		http.Error(w, "Not found", 404)
+		return
+	}
+
+	// Query
+	firstTouches, err := h.TrackService.GetFirstTouchForKPI(kpi)
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, "Internal Error", http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(firstTouches)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, "Internal Error", http.StatusInternalServerError)
 		return
 	}
 

@@ -1,0 +1,20 @@
+=~=~=~=~=~=~=~=~=~=~=~
+FIRST TOUCH
+=~=~=~=~=~=~=~=~=~=~=~
+
+SELECT campaign_name as value, count(*) as count
+FROM tracks t
+WHERE EXISTS (
+  SELECT 1 
+  FROM tracks t2
+  WHERE t2.event = 'signup'
+  AND t.anonymous_id = t2.anonymous_id
+)
+AND NOT EXISTS (
+  SELECT * 
+  FROM tracks t2
+  WHERE t.anonymous_id = t2.anonymous_id
+  AND t2.received_at < t.received_at
+)
+GROUP BY 1
+ORDER BY 2 DESC;

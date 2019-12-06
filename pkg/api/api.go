@@ -7,9 +7,9 @@ type Track struct {
 	ID              int       `json:"id" db:"id"`
 	OwnerID         int64     `json:"ownerId" db:"owner_id"`
 	UserID          string    `json:"userId" db:"user_id"`
-	FpHash          string    `json:"fpHash" db:"fp_hash"`     // fingerprint hash
-	PageURL         string    `json:"pageURL" db:"page_url"`   // optional (website specific)
-	PagePath        string    `json:"pagePath" db:"page_path"` // optional ()
+	AnonymousID     string    `json:"anonymousId" db:"anonymous_id"` // fingerprint hash
+	PageURL         string    `json:"pageURL" db:"page_url"`         // optional (website specific)
+	PagePath        string    `json:"pagePath" db:"page_path"`       // optional ()
 	PageTitle       string    `json:"pageTitle" db:"page_title"`
 	PageReferrer    string    `json:"pageReferrer" db:"page_referrer"`
 	Event           string    `json:"event" db:"event"`
@@ -57,6 +57,7 @@ type TrackService interface {
 	GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)
+	GetFirstTouchForKPI(kpi KPI) ([]ValueCount, error)
 	// DeleteTrack(id int) error
 }
 
