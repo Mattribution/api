@@ -125,6 +125,7 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 //  that signifies it is an inferred campaign
 func (s TrackService) GetCampaigns() ([]string, error) {
 	sqlStatement := `SELECT campaign_name FROM tracks
+	WHERE campaign_name <> ''
 	GROUP BY 1`
 
 	campaigns := []string{}
