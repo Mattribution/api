@@ -120,6 +120,23 @@ func (s TrackService) FindByID(id int) (api.Track, error) {
 	return t, nil
 }
 
+// GetCampaigns infers campaign names from tracking data
+// 	TODO: When adding custom campaigns, this should return an api.Campaign object
+//  that signifies it is an inferred campaign
+func (s TrackService) GetCampaigns() ([]string, error) {
+	sqlStatement := `SELECT campaign_name FROM tracks
+	GROUP BY 1`
+
+	campaigns := []string{}
+	err := s.DB.Select(&campaigns, sqlStatement)
+	if err != nil {
+		// handle this error better than this
+		return nil, err
+	}
+
+	return campaigns, nil
+}
+
 // GetTopValuesFromColumn gets a theGetTopValuesFromColumn top values from a column along with their counts
 // TODO: implement daily limit
 func (s TrackService) GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]api.ValueCount, error) {

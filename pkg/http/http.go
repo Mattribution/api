@@ -38,6 +38,7 @@ func (h *Handler) Serve(addr string) error {
 	// Setup mux
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/pixel/track", h.NewTrack).Methods("GET")
+	r.HandleFunc("/v1/tracks/campaigns", h.TrackCampaigns).Methods("GET")
 	r.HandleFunc("/v1/tracks/daily_visits", h.DailyVisits).Methods("GET")
 	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
 	r.HandleFunc("/v1/tracks/most_active_campaigns", h.MostActiveCampaigns).Methods("GET")
@@ -88,6 +89,28 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/gif")
 	w.Write(gif)
+}
+
+func (h *Handler) TrackCampaigns(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	campaigns, err := h.TrackService.GetCampaigns()
+	if err != nil {
+		panic(err)
+	}
+
+	// Marshall response
+	js, err := json.Marshal(campaigns)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 func (h *Handler) DailyVisits(w http.ResponseWriter, r *http.Request) {

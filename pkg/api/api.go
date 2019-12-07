@@ -54,6 +54,7 @@ type ValueCount struct {
 type TrackService interface {
 	Store(t Track) (int, error)
 	FindByID(id int) (Track, error)
+	GetCampaigns() ([]string, error)
 	GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)

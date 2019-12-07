@@ -46,7 +46,7 @@ func main() {
 		}
 	}
 
-	bar.Increment()
+	bar.Finish()
 }
 
 func storeBillingEvent(db *sqlx.DB, be api.BillingEvent) {
