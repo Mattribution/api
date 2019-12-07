@@ -31,7 +31,8 @@ CREATE TABLE billing_events (
   id SERIAL PRIMARY KEY,
   owner_id integer,
   user_id integer,
-  amount money
+  amount money,
+  created_at timestamp
 )
 
 

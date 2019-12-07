@@ -18,8 +18,12 @@ func main() {
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 	}
+	billingEventService, err := postgres.NewBillingEventService("localhost", "postgres", "password", "mattribution", 5432)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+	}
 
-	httpHandler := http.NewHandler(trackService, kpiService)
+	httpHandler := http.NewHandler(trackService, kpiService, billingEventService)
 	log.Fatal(httpHandler.Serve(":3001"))
 
 }

@@ -18,3 +18,35 @@ AND NOT EXISTS (
 )
 GROUP BY 1
 ORDER BY 2 DESC;
+
+
+SELECT   as value
+	FROM tracks t
+	WHERE EXISTS (
+		SELECT 1 
+		FROM tracks t2
+		WHERE t2.campaign_name = 'signup'
+		AND t.anonymous_id = t2.anonymous_id
+	)
+	AND NOT EXISTS (
+		SELECT * 
+		FROM tracks t2
+		WHERE t.anonymous_id = t2.anonymous_id
+		AND t2.received_at < t.received_at
+	);
+=~=~=~=~=~=~=~=~=~=~=~
+Client
+=~=~=~=~=~=~=~=~=~=~=~
+// Add event listener to all buttons
+
+function addtoev() {
+  var bns = document.getElementsByTagName("button");
+  for (i = 0; i < bns.length; i++) {
+    bns[i].addEventListener("click", function() {
+    alert("you clicked"); });
+  }
+}
+
+window.addEventListener("load",function() {
+  addtoev();
+});

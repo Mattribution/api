@@ -20,14 +20,16 @@ var gif = []byte{
 }
 
 type Handler struct {
-	TrackService api.TrackService
-	KPIService   api.KPIService
+	TrackService        api.TrackService
+	KPIService          api.KPIService
+	BillingEventService api.BillingEventService
 }
 
-func NewHandler(trackService api.TrackService, kpiService api.KPIService) Handler {
+func NewHandler(trackService api.TrackService, kpiService api.KPIService, billingEventService api.BillingEventService) Handler {
 	return Handler{
-		TrackService: trackService,
-		KPIService:   kpiService,
+		TrackService:        trackService,
+		KPIService:          kpiService,
+		BillingEventService: billingEventService,
 	}
 }
 
@@ -47,7 +49,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/kpis/{kpi}/daily_conversion_count", h.KPIDailyConversionCount).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}/first_touch", h.KPIFirstTouch).Methods("GET")
 
-	// r.HandleFunc("/v1/billing_events", h.NewKPI).Methods("POST")
+	r.HandleFunc("/v1/billing_events", h.NewBillingEvent).Methods("POST")
 	// r.HandleFunc("/v1/kpis/by_user_id", h.KPIGetAll).Methods("GET")
 
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
@@ -168,7 +170,6 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	var kpi api.KPI
 	err := decoder.Decode(&kpi)
-	log.Printf("KPI: %v", kpi)
 	if err != nil {
 		http.Error(w, "Invalid KPI object delivered. Expected {column, value}", 400)
 		return
@@ -379,3 +380,35 @@ func (h *Handler) KPIFirstTouch(w http.ResponseWriter, r *http.Request) {
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
 // =~ BillingEvents
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// NewBillingEvent creates a new billing event
+func (h *Handler) NewBillingEvent(w http.ResponseWriter, r *http.Request) {
+	// Get KPI data
+	decoder := json.NewDecoder(r.Body)
+	var billingEvent api.BillingEvent
+	err := decoder.Decode(&billingEvent)
+	if err != nil {
+		http.Error(w, "Invalid KPI object delivered. Expected {column, value}", 400)
+		return
+	}
+
+	// TODO: validate the kpi data
+
+	// Store
+	id, err := h.BillingEventService.Store(billingEvent)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
+	billingEvent.ID = id
+
+	data, err := json.Marshal(billingEvent)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write data back to client
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
