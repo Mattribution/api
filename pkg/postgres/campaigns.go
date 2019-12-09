@@ -79,3 +79,44 @@ func (s CampaignService) FindByID(id int, ownerID int) (api.Campaign, error) {
 
 	return campaign, nil
 }
+
+// ScanForNewCampaigns scans the tracks for any new campaigns and creates new
+//  campaings if it detects a pattern that hasn't been matched.
+//  TODO: optimize this to run on a schedule
+func (s CampaignService) ScanForNewCampaigns(ownerID int) (int, error) {
+	sqlStatement := `SELECT campaign_name FROM tracks
+	WHERE campaign_name <> ''
+	AND NOT EXISTS (
+		SELECT 1
+		FROM campaigns
+		WHERE owner_id = $1
+		AND column_name = 'campaign_name'
+		AND column_value = campaign_name
+	)
+	GROUP BY 1`
+
+	var newCampaignNames []string
+	err := s.DB.Select(&newCampaignNames, sqlStatement, ownerID)
+	if err != nil {
+		return 0, err
+	}
+
+	// Loop over detected campaign names and create campaigns for them
+	storedCount := 0
+	for _, campaignName := range newCampaignNames {
+		newCampaign := api.Campaign{
+			OwnerID:     ownerID,
+			Name:        campaignName,
+			ColumnName:  "campaign_name",
+			ColumnValue: campaignName,
+			CreatedAt:   time.Now(),
+		}
+		_, err := s.Store(newCampaign)
+		if err != nil {
+			return storedCount, err
+		}
+		storedCount++
+	}
+
+	return storedCount, nil
+}

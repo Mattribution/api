@@ -87,5 +87,5 @@ type CampaignService interface {
 	Store(campaign Campaign) (int, error)
 	Find(ownerID int) ([]Campaign, error)
 	FindByID(id int, ownerID int) (Campaign, error)
-	// ScanForNewCampaigns() (int, error)
+	ScanForNewCampaigns(ownerID int) (int, error)
 }

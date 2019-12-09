@@ -58,6 +58,7 @@ func (h *Handler) Serve(addr string) error {
 	// r.HandleFunc("/v1/kpis/by_user_id", h.KPIGetAll).Methods("GET")
 
 	r.HandleFunc("/v1/campaigns", h.GetCampaigns).Methods("GET")
+	r.HandleFunc("/v1/campaigns/scan", h.ScanForNewCampaigns).Methods("GET")
 
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
 }
@@ -320,11 +321,29 @@ func (h *Handler) NewBillingEvent(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetCampaigns(w http.ResponseWriter, r *http.Request) {
 	campaigns, err := h.CampaignService.Find(mockOwnerID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
 		panic(err)
 	}
 
 	data, err := json.Marshal(campaigns)
+	if err != nil {
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write data back to client
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+func (h *Handler) ScanForNewCampaigns(w http.ResponseWriter, r *http.Request) {
+	createCount, err := h.CampaignService.ScanForNewCampaigns(mockOwnerID)
+	if err != nil {
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
+	}
+
+	data, err := json.Marshal(createCount)
 	if err != nil {
 		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
 		panic(err)
