@@ -1,0 +1,112 @@
+package http
+
+import (
+	"encoding/base64"
+	"encoding/json"
+	"log"
+	"net"
+	"net/http"
+
+	"github.com/mattribution/api/pkg/api"
+)
+
+func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
+	// Get pixel data from client
+	v := r.URL.Query()
+	rawEvent := v.Get("data")
+	data, err := base64.StdEncoding.DecodeString(rawEvent)
+	if err != nil {
+		panic(err)
+	}
+
+	// Unmarshal
+	track := api.Track{}
+	if err := json.Unmarshal(data, &track); err != nil {
+		panic(err)
+	}
+
+	// Grab IP
+	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+	track.IP = ip
+
+	// Store
+	_, err = h.TrackService.Store(track)
+	if err != nil {
+		panic(err)
+	}
+
+	// Write gif back to client
+	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+	w.Header().Set("Content-Type", "image/gif")
+	w.Write(gif)
+}
+
+func (h *Handler) DailyVisits(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	dailyVisits, err := h.TrackService.GetCountsFromColumn(30, `date_trunc('day', tracks.received_at)`, "tracks")
+	if err != nil {
+		panic(err)
+	}
+
+	// Marshall response
+	js, err := json.Marshal(dailyVisits)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	topPages, err := h.TrackService.GetTopValuesFromColumn(30, "page_title", "tracks", "")
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(topPages)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}
+
+func (h *Handler) MostActiveCampaigns(w http.ResponseWriter, r *http.Request) {
+	// TODO: Auth and get info on what data to look at
+
+	// Query
+	activeCampaigns, err := h.TrackService.GetTopValuesFromColumn(30, "campaign_name", "tracks", `WHERE campaign_name <> ''`)
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(activeCampaigns)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
+}

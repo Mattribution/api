@@ -22,8 +22,12 @@ func main() {
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 	}
+	campaignService, err := postgres.NewCampaignService("localhost", "postgres", "password", "mattribution", 5432)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+	}
 
-	httpHandler := http.NewHandler(trackService, kpiService, billingEventService)
+	httpHandler := http.NewHandler(trackService, kpiService, billingEventService, campaignService)
 	log.Fatal(httpHandler.Serve(":3001"))
 
 }

@@ -1,0 +1,81 @@
+package postgres
+
+import (
+	"database/sql"
+	"errors"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/mattribution/api/pkg/api"
+)
+
+type CampaignService struct {
+	DB *sqlx.DB
+}
+
+// NewCampaignService Creates a new CampaignService object
+func NewCampaignService(host, username, password, dbName string, port int) (*CampaignService, error) {
+	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		host, port, username, password, dbName)
+	db, err := sqlx.Open("postgres", psqlInfo)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+
+	return &CampaignService{
+		db,
+	}, err
+}
+
+// Store stores the track in the db
+func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
+	sqlStatement :=
+		`INSERT INTO public.campaigns (owner_id, name, column_name, column_value, created_at)
+	VALUES($1, $2, $3, $4, $5)
+	RETURNING id`
+
+	id := 0
+	err := s.DB.QueryRow(sqlStatement, campaign.OwnerID, campaign.Name, campaign.ColumnName, campaign.ColumnValue, time.Now().Format(time.RFC3339)).Scan(&id)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+
+	return id, err
+}
+
+func (s *CampaignService) Find(ownerID int) ([]api.Campaign, error) {
+	sqlStatement :=
+		`SELECT * FROM public.campaigns
+		WHERE owner_id = $1`
+
+	campaigns := []api.Campaign{}
+	err := s.DB.Select(&campaigns, sqlStatement, ownerID)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+
+	return campaigns, err
+}
+
+// FindByID finds a single campaign by id
+func (s CampaignService) FindByID(id int, ownerID int) (api.Campaign, error) {
+	sqlStatement :=
+		`SELECT * FROM public.campaigns
+		WHERE id = $1
+		AND owner_id = $2`
+
+	var campaign api.Campaign
+
+	switch err := s.DB.Get(&campaign, sqlStatement, id, ownerID); err {
+	case sql.ErrNoRows:
+		return api.Campaign{}, errors.New("Not found")
+	case nil:
+	default:
+		return api.Campaign{}, err
+	}
+
+	return campaign, nil
+}

@@ -1,10 +1,8 @@
 package http
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"log"
-	"net"
 	"net/http"
 	"strconv"
 
@@ -19,17 +17,24 @@ var gif = []byte{
 	1, 0, 1, 0, 0, 2, 1, 68, 0, 59,
 }
 
+const (
+	internalServerErrorMsg = "Internal Error"
+	mockOwnerID            = 1
+)
+
 type Handler struct {
 	TrackService        api.TrackService
 	KPIService          api.KPIService
 	BillingEventService api.BillingEventService
+	CampaignService     api.CampaignService
 }
 
-func NewHandler(trackService api.TrackService, kpiService api.KPIService, billingEventService api.BillingEventService) Handler {
+func NewHandler(trackService api.TrackService, kpiService api.KPIService, billingEventService api.BillingEventService, campaignService api.CampaignService) Handler {
 	return Handler{
 		TrackService:        trackService,
 		KPIService:          kpiService,
 		BillingEventService: billingEventService,
+		CampaignService:     campaignService,
 	}
 }
 
@@ -38,7 +43,6 @@ func (h *Handler) Serve(addr string) error {
 	// Setup mux
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/pixel/track", h.NewTrack).Methods("GET")
-	r.HandleFunc("/v1/tracks/campaigns", h.TrackCampaigns).Methods("GET")
 	r.HandleFunc("/v1/tracks/daily_visits", h.DailyVisits).Methods("GET")
 	r.HandleFunc("/v1/tracks/top_pages", h.TopPages).Methods("GET")
 	r.HandleFunc("/v1/tracks/most_active_campaigns", h.MostActiveCampaigns).Methods("GET")
@@ -53,134 +57,9 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/billing_events", h.NewBillingEvent).Methods("POST")
 	// r.HandleFunc("/v1/kpis/by_user_id", h.KPIGetAll).Methods("GET")
 
+	r.HandleFunc("/v1/campaigns", h.GetCampaigns).Methods("GET")
+
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
-}
-
-// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
-// =~ Tracks
-// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
-
-func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
-	// Get pixel data from client
-	v := r.URL.Query()
-	rawEvent := v.Get("data")
-	data, err := base64.StdEncoding.DecodeString(rawEvent)
-	if err != nil {
-		panic(err)
-	}
-
-	// Unmarshal
-	track := api.Track{}
-	if err := json.Unmarshal(data, &track); err != nil {
-		panic(err)
-	}
-
-	// Grab IP
-	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	track.IP = ip
-
-	// Store
-	_, err = h.TrackService.Store(track)
-	if err != nil {
-		panic(err)
-	}
-
-	// Write gif back to client
-	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
-	w.Header().Set("Content-Type", "image/gif")
-	w.Write(gif)
-}
-
-func (h *Handler) TrackCampaigns(w http.ResponseWriter, r *http.Request) {
-	// TODO: Auth and get info on what data to look at
-
-	// Query
-	campaigns, err := h.TrackService.GetCampaigns()
-	if err != nil {
-		panic(err)
-	}
-
-	// Marshall response
-	js, err := json.Marshal(campaigns)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Write json back to client
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-}
-
-func (h *Handler) DailyVisits(w http.ResponseWriter, r *http.Request) {
-	// TODO: Auth and get info on what data to look at
-
-	// Query
-	dailyVisits, err := h.TrackService.GetCountsFromColumn(30, `date_trunc('day', tracks.received_at)`, "tracks")
-	if err != nil {
-		panic(err)
-	}
-
-	// Marshall response
-	js, err := json.Marshal(dailyVisits)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Write json back to client
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-}
-
-func (h *Handler) TopPages(w http.ResponseWriter, r *http.Request) {
-	// TODO: Auth and get info on what data to look at
-
-	// Query
-	topPages, err := h.TrackService.GetTopValuesFromColumn(30, "page_title", "tracks", "")
-	if err != nil {
-		log.Printf("ERORR: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Marshall response
-	js, err := json.Marshal(topPages)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Write json back to client
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
-}
-
-func (h *Handler) MostActiveCampaigns(w http.ResponseWriter, r *http.Request) {
-	// TODO: Auth and get info on what data to look at
-
-	// Query
-	activeCampaigns, err := h.TrackService.GetTopValuesFromColumn(30, "campaign_name", "tracks", `WHERE campaign_name <> ''`)
-	if err != nil {
-		log.Printf("ERORR: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Marshall response
-	js, err := json.Marshal(activeCampaigns)
-	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Write json back to client
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(js)
 }
 
 // =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
@@ -382,17 +261,15 @@ func (h *Handler) KPIFirstTouch(w http.ResponseWriter, r *http.Request) {
 	// Query
 	firstTouches, err := h.TrackService.GetFirstTouchForKPI(kpi)
 	if err != nil {
-		log.Printf("ERORR: %v", err)
-		http.Error(w, "Internal Error", http.StatusInternalServerError)
-		return
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
 	}
 
 	// Marshall response
 	js, err := json.Marshal(firstTouches)
 	if err != nil {
-		log.Printf("ERROR: %v\n", err)
-		http.Error(w, "Internal Error", http.StatusInternalServerError)
-		return
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
 	}
 
 	// Write json back to client
@@ -411,7 +288,7 @@ func (h *Handler) NewBillingEvent(w http.ResponseWriter, r *http.Request) {
 	err := decoder.Decode(&billingEvent)
 	if err != nil {
 		http.Error(w, "Invalid KPI object delivered. Expected {column, value}", 400)
-		return
+		panic(err)
 	}
 
 	// TODO: validate the kpi data
@@ -419,7 +296,7 @@ func (h *Handler) NewBillingEvent(w http.ResponseWriter, r *http.Request) {
 	// Store
 	id, err := h.BillingEventService.Store(billingEvent)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
 		panic(err)
 	}
 
@@ -427,7 +304,29 @@ func (h *Handler) NewBillingEvent(w http.ResponseWriter, r *http.Request) {
 
 	data, err := json.Marshal(billingEvent)
 	if err != nil {
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write data back to client
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+}
+
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+// =~ Campaigns
+// =~=~=~=~=~=~=~=~=~=~=~=~=~=~=~=~
+
+func (h *Handler) GetCampaigns(w http.ResponseWriter, r *http.Request) {
+	campaigns, err := h.CampaignService.Find(mockOwnerID)
+	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
+	data, err := json.Marshal(campaigns)
+	if err != nil {
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
 		panic(err)
 	}
 

@@ -33,6 +33,16 @@ type KPI struct {
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
+type Campaign struct {
+	ID        int       `json:"id" db:"id"`
+	OwnerID   int       `json:"owner_id" db:"owner_id"`
+	Name      string    `json:"name" db:"name"`
+	CreatedAt time.Time `json:"-" db:"created_at"`
+	// Pattern to match
+	ColumnName  string `json:"-" db:"column_name"`
+	ColumnValue string `json:"-" db:"column_value"`
+}
+
 type BillingEvent struct {
 	ID        int       `json:"id" db:"id"`
 	OwnerID   int       `json:"-" db:"owner_id"`
@@ -54,7 +64,6 @@ type ValueCount struct {
 type TrackService interface {
 	Store(t Track) (int, error)
 	FindByID(id int) (Track, error)
-	GetCampaigns() ([]string, error)
 	GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
 	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)
@@ -72,4 +81,11 @@ type KPIService interface {
 type BillingEventService interface {
 	Store(billingEvent BillingEvent) (int, error)
 	FindByUserID(id int) (BillingEvent, error)
+}
+
+type CampaignService interface {
+	Store(campaign Campaign) (int, error)
+	Find(ownerID int) ([]Campaign, error)
+	FindByID(id int, ownerID int) (Campaign, error)
+	// ScanForNewCampaigns() (int, error)
 }
