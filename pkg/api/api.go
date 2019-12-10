@@ -34,13 +34,14 @@ type KPI struct {
 }
 
 type Campaign struct {
-	ID        int       `json:"id" db:"id"`
-	OwnerID   int       `json:"owner_id" db:"owner_id"`
-	Name      string    `json:"name" db:"name"`
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	ID           int       `json:"id" db:"id"`
+	OwnerID      int       `json:"owner_id" db:"owner_id"`
+	Name         string    `json:"name" db:"name"`
+	CreatedAt    time.Time `json:"-" db:"created_at"`
+	CostPerMonth *float64  `json:"costPerMonth" db:"cost_per_month"`
 	// Pattern to match
-	ColumnName  string `json:"-" db:"column_name"`
-	ColumnValue string `json:"-" db:"column_value"`
+	ColumnName  string `json:"columnName" db:"column_name"`
+	ColumnValue string `json:"columnValue" db:"column_value"`
 }
 
 type BillingEvent struct {
