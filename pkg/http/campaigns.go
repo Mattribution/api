@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/mattribution/api/pkg/api"
 )
 
 func (h *Handler) GetCampaigns(w http.ResponseWriter, r *http.Request) {
@@ -25,6 +26,27 @@ func (h *Handler) GetCampaigns(w http.ResponseWriter, r *http.Request) {
 	// Write data back to client
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+func (h *Handler) UpdateCampaign(w http.ResponseWriter, r *http.Request) {
+	// Get Campaign data
+	decoder := json.NewDecoder(r.Body)
+	var campaign api.Campaign
+	err := decoder.Decode(&campaign)
+	if err != nil {
+		http.Error(w, "Invalid object delivered.", 400)
+		panic(err)
+	}
+
+	// Attempt to update
+	err = h.CampaignService.Update(campaign)
+	if err != nil {
+		http.Error(w, internalServerErrorMsg, http.StatusInternalServerError)
+		panic(err)
+	}
+
+	// Write data back to client
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) GetOneCampaign(w http.ResponseWriter, r *http.Request) {

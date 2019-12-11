@@ -35,7 +35,7 @@ type KPI struct {
 
 type Campaign struct {
 	ID           int       `json:"id" db:"id"`
-	OwnerID      int       `json:"owner_id" db:"owner_id"`
+	OwnerID      int       `json:"ownerId" db:"owner_id"`
 	Name         string    `json:"name" db:"name"`
 	CreatedAt    time.Time `json:"-" db:"created_at"`
 	CostPerMonth *float64  `json:"costPerMonth" db:"cost_per_month"`
@@ -86,6 +86,7 @@ type BillingEventService interface {
 
 type CampaignService interface {
 	Store(campaign Campaign) (int, error)
+	Update(campaifn Campaign) error
 	Find(ownerID int) ([]Campaign, error)
 	FindByID(id int, ownerID int) (Campaign, error)
 	ScanForNewCampaigns(ownerID int) (int, error)

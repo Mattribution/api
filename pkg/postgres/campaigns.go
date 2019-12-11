@@ -33,8 +33,8 @@ func NewCampaignService(host, username, password, dbName string, port int) (*Cam
 // Store stores the track in the db
 func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
 	sqlStatement :=
-		`INSERT INTO public.campaigns (owner_id, name, column_name, column_value, created_at)
-	VALUES($1, $2, $3, $4, $5)
+		`INSERT INTO public.campaigns (owner_id, name, column_name, column_value, cost_per_month, created_at)
+	VALUES($1, $2, $3, $4, $5, $6)
 	RETURNING id`
 
 	id := 0
@@ -44,6 +44,17 @@ func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
 	}
 
 	return id, err
+}
+
+func (s *CampaignService) Update(campaign api.Campaign) error {
+	sqlStatement :=
+		fmt.Sprintf(`UPDATE public.campaigns
+		SET name=:name, cost_per_month=:cost_per_month
+		WHERE id=%v`, campaign.ID)
+
+	_, err := s.DB.NamedExec(sqlStatement, campaign)
+
+	return err
 }
 
 func (s *CampaignService) Find(ownerID int) ([]api.Campaign, error) {
