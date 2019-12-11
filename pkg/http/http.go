@@ -54,9 +54,9 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/billing_events", h.NewBillingEvent).Methods("POST")
 
 	r.HandleFunc("/v1/campaigns", h.GetCampaigns).Methods("GET")
+	r.HandleFunc("/v1/campaigns/scan", h.ScanForNewCampaigns).Methods("GET")
 	r.HandleFunc("/v1/campaigns/{campaign}", h.UpdateCampaign).Methods("PUT")
 	r.HandleFunc("/v1/campaigns/{campaign}", h.GetOneCampaign).Methods("GET")
-	r.HandleFunc("/v1/campaigns/scan", h.ScanForNewCampaigns).Methods("GET")
 
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
 }

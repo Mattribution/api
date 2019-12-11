@@ -38,7 +38,7 @@ func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
 	RETURNING id`
 
 	id := 0
-	err := s.DB.QueryRow(sqlStatement, campaign.OwnerID, campaign.Name, campaign.ColumnName, campaign.ColumnValue, time.Now().Format(time.RFC3339)).Scan(&id)
+	err := s.DB.QueryRow(sqlStatement, campaign.OwnerID, campaign.Name, campaign.ColumnName, campaign.ColumnValue, campaign.CostPerMonth, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
 	}
