@@ -81,7 +81,7 @@ type TrackService interface {
 
 type KPIService interface {
 	Store(kpi KPI) (int, error)
-	Find() ([]KPI, error)
+	Find(ownerID int) ([]KPI, error)
 	FindByID(id int) (KPI, error)
 	Delete(int) (int64, error)
 }
@@ -101,5 +101,6 @@ type CampaignService interface {
 
 type ConversionService interface {
 	Store(conversion Conversion) (int, error)
-	Delete(int) (int64, error)
+	Find(ownerID int) ([]Conversion, error)
+	Delete(id int, ownerID int) (int64, error)
 }

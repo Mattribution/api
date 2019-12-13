@@ -55,12 +55,15 @@ func (s KPIService) FindByID(id int) (api.KPI, error) {
 }
 
 // Find queries for all kpis (no filter)
-func (s KPIService) Find() ([]api.KPI, error) {
+func (s KPIService) Find(ownerID int) ([]api.KPI, error) {
 	sqlStatement :=
-		`SELECT * FROM public.kpis`
+		`SELECT * 
+		FROM public.kpis
+		WHERE owner_id = $1
+		`
 
 	kpis := []api.KPI{}
-	err := s.DB.Select(&kpis, sqlStatement)
+	err := s.DB.Select(&kpis, sqlStatement, ownerID)
 	if err != nil {
 		return nil, err
 	}

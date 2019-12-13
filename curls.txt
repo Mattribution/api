@@ -1,2 +1,3 @@
 curl -X POST -H "Content-Type: application/json" -d '{"name": "Signup", "column": "event", "value": "signup", "target": 100}' localhost:3001/v1/kpis
 
+curl -X GET localhost:3001/v1/pixel/track?data=eyJldmVudCI6ICJzaWdudXAifQ==

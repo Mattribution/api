@@ -31,10 +31,11 @@ func main() {
 	// Setup
 	trackService := postgres.TrackService{db}
 	kpiService := postgres.KPIService{db}
+	conversionService := postgres.ConversionService{db}
 	billingEventService := postgres.BillingEventService{db}
 	campaignService := postgres.CampaignService{db}
 
-	httpHandler := http.NewHandler(trackService, kpiService, billingEventService, campaignService)
+	httpHandler := http.NewHandler(trackService, kpiService, conversionService, billingEventService, campaignService)
 	log.Fatal(httpHandler.Serve(":3001"))
 
 }

@@ -19,9 +19,9 @@ type TrackService struct {
 // Store stores the track in the db
 func (s TrackService) Store(t api.Track) (int, error) {
 	sqlStatement :=
-		`INSERT INTO public.tracks (owner_id, user_id, fp_hash, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
-		OUTPUT Inserted.ID
-		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`
+		`INSERT INTO public.tracks (owner_id, user_id, anonymous_id, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
+		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		RETURNING id`
 
 	// Set default json value (so postgres doesn't get mad)
 	if t.Extra == "" {

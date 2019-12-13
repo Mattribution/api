@@ -3,11 +3,15 @@ package http
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"log"
 	"net"
 	"net/http"
 
+	"gopkg.in/oleiade/reflections.v1"
+
 	"github.com/mattribution/api/pkg/api"
+	"github.com/mattribution/api/pkg/utils"
 )
 
 func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
@@ -16,23 +20,58 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	rawEvent := v.Get("data")
 	data, err := base64.StdEncoding.DecodeString(rawEvent)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
 	}
 
 	// Unmarshal
 	track := api.Track{}
 	if err := json.Unmarshal(data, &track); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
 	}
+
+	// TODO: real auth
+	track.OwnerID = mockOwnerID
 
 	// Grab IP
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	track.IP = ip
 
-	// Store
-	_, err = h.TrackService.Store(track)
+	// Store raw track
+	newTrackID, err := h.TrackService.Store(track)
 	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
+	}
+
+	// TODO: there must be a better way to do this...
+	kpis, err := h.KPIService.Find(mockOwnerID)
+	for _, kpi := range kpis {
+		// Get the field name that matches the column patter from the kpi
+		fieldName := utils.GetFieldName(kpi.Column, "db", track)
+		if fieldName == "" { // field wasn't found
+			err := errors.New("Column doesn't exist")
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			panic(err)
+		}
+
+		// Get the value for that field from the track
+		value, err := reflections.GetField(track, fieldName)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			panic(err)
+		}
+
+		// If match, create conversion
+		if value == kpi.Value {
+			conversion := api.Conversion{
+				OwnerID: mockOwnerID,
+				TrackID: newTrackID,
+				KPIID:   kpi.ID,
+			}
+			h.ConversionService.Store(conversion)
+		}
 	}
 
 	// Write gif back to client

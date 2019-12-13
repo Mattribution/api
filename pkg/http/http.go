@@ -22,16 +22,18 @@ const (
 type Handler struct {
 	TrackService        api.TrackService
 	KPIService          api.KPIService
+	ConversionService   api.ConversionService
 	BillingEventService api.BillingEventService
 	CampaignService     api.CampaignService
 }
 
-func NewHandler(trackService api.TrackService, kpiService api.KPIService, billingEventService api.BillingEventService, campaignService api.CampaignService) Handler {
+func NewHandler(trackService api.TrackService, kpiService api.KPIService, conversionService api.ConversionService, billingEventService api.BillingEventService, campaignService api.CampaignService) Handler {
 	return Handler{
 		TrackService:        trackService,
 		KPIService:          kpiService,
 		BillingEventService: billingEventService,
 		CampaignService:     campaignService,
+		ConversionService:   conversionService,
 	}
 }
 

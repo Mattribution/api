@@ -21,6 +21,9 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: real auth
+	kpi.OwnerID = mockOwnerID
+
 	// TODO: validate the kpi data
 
 	// Store
@@ -44,7 +47,7 @@ func (h *Handler) NewKPI(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetKPIs(w http.ResponseWriter, r *http.Request) {
-	kpis, err := h.KPIService.Find()
+	kpis, err := h.KPIService.Find(mockOwnerID)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(w, "An error occurred", http.StatusInternalServerError)

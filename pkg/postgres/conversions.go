@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -25,6 +26,21 @@ func (s ConversionService) Store(conversion api.Conversion) (int, error) {
 	}
 
 	return id, nil
+}
+
+// Find all conversions for a user
+func (s ConversionService) Find(ownerID int) ([]api.Conversion, error) {
+	sqlStatement :=
+		`SELECT * FROM public.conversions
+		WHERE owner_id = $1`
+
+	conversions := []api.Conversion{}
+	err := s.DB.Select(&conversions, sqlStatement, ownerID)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+
+	return conversions, err
 }
 
 // Delete removes a single conversion by id
