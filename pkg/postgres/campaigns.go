@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+
 	"github.com/mattribution/api/pkg/api"
 )
 
@@ -15,23 +17,8 @@ type CampaignService struct {
 	DB *sqlx.DB
 }
 
-// NewCampaignService Creates a new CampaignService object
-func NewCampaignService(host, username, password, dbName string, port int) (*CampaignService, error) {
-	psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, username, password, dbName)
-	db, err := sqlx.Open("postgres", psqlInfo)
-	if err != nil {
-		log.Printf("ERROR: %s", err)
-	}
-
-	return &CampaignService{
-		db,
-	}, err
-}
-
 // Store stores the track in the db
-func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
+func (s CampaignService) Store(campaign api.Campaign) (int, error) {
 	sqlStatement :=
 		`INSERT INTO public.campaigns (owner_id, name, column_name, column_value, cost_per_month, created_at)
 	VALUES($1, $2, $3, $4, $5, $6)
@@ -46,7 +33,7 @@ func (s *CampaignService) Store(campaign api.Campaign) (int, error) {
 	return id, err
 }
 
-func (s *CampaignService) Update(campaign api.Campaign) error {
+func (s CampaignService) Update(campaign api.Campaign) error {
 	sqlStatement :=
 		fmt.Sprintf(`UPDATE public.campaigns
 		SET name=:name, cost_per_month=:cost_per_month
@@ -57,7 +44,7 @@ func (s *CampaignService) Update(campaign api.Campaign) error {
 	return err
 }
 
-func (s *CampaignService) Find(ownerID int) ([]api.Campaign, error) {
+func (s CampaignService) Find(ownerID int) ([]api.Campaign, error) {
 	sqlStatement :=
 		`SELECT * FROM public.campaigns
 		WHERE owner_id = $1`

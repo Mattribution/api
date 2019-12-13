@@ -33,6 +33,13 @@ type KPI struct {
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
+type Conversion struct {
+	ID      int `json:"id" db:"id"`
+	OwnerID int `json:"-" db:"owner_id"`
+	TrackID int `json:"trackId" db:"track_id"`
+	KPIID   int `json:"kpiId" db:"kpi_id"`
+}
+
 type Campaign struct {
 	ID           int       `json:"id" db:"id"`
 	OwnerID      int       `json:"ownerId" db:"owner_id"`
@@ -90,4 +97,9 @@ type CampaignService interface {
 	Find(ownerID int) ([]Campaign, error)
 	FindByID(id int, ownerID int) (Campaign, error)
 	ScanForNewCampaigns(ownerID int) (int, error)
+}
+
+type ConversionService interface {
+	Store(conversion Conversion) (int, error)
+	Delete(int) (int64, error)
 }
