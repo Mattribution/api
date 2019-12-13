@@ -19,11 +19,12 @@ type BillingEventService struct {
 func (s BillingEventService) Store(billingEvent api.BillingEvent) (int, error) {
 	sqlStatement :=
 		`INSERT INTO public.billing_events (user_id, amount, created_at)
-	VALUES($1, $2, $3)
+	VALUES(:user_id, :amount, :created_at)
 	RETURNING id`
 
 	id := 0
-	err := s.DB.QueryRow(sqlStatement, billingEvent.UserID, billingEvent.Amount, time.Now().Format(time.RFC3339)).Scan(&id)
+	billingEvent.CreatedAt = time.Now()
+	err := s.DB.QueryRow(sqlStatement, billingEvent).Scan(&id)
 	if err != nil {
 		return id, err
 	}
