@@ -1,7 +1,22 @@
 =~=~=~=~=~=~=~=~=~=~=~
 FIRST TOUCH
 =~=~=~=~=~=~=~=~=~=~=~
+WHERE EXISTS (
+  SELECT 1 
+  FROM tracks t2
+  WHERE t2.event = 'signup'
+  AND t.anonymous_id = t2.anonymous_id
+)
+AND NOT EXISTS (
+  SELECT * 
+  FROM tracks t2
+  WHERE t.anonymous_id = t2.anonymous_id
+  AND t2.received_at < t.received_at
+)
 
+=~=~=~=~=~=~=~=~=~=~=~
+FIRST TOUCH CONVERSIONS grouped by campaign_name
+=~=~=~=~=~=~=~=~=~=~=~
 SELECT campaign_name as value, count(*) as count
 FROM tracks t
 WHERE EXISTS (
@@ -18,3 +33,66 @@ AND NOT EXISTS (
 )
 GROUP BY 1
 ORDER BY 2 DESC;
+
+=~=~=~=~=~=~=~=~=~=~=~
+FIRST TOUCH CONVERSIONS revenue
+=~=~=~=~=~=~=~=~=~=~=~
+
+
+SELECT *
+FROM tracks t
+WHERE EXISTS (
+  SELECT 1 
+  FROM tracks t2, billing_events b
+  WHERE t2.event = 'signup'
+  AND t.anonymous_id = t2.anonymous_id
+  AND b.user_id = t2.user_id
+)
+AND NOT EXISTS (
+  SELECT 1
+  FROM tracks t2
+  WHERE t.anonymous_id = t2.anonymous_id
+  AND t2.received_at < t.received_at
+)
+AND EXISTS (
+  SELECT 1
+  FROM billing_events
+  WHERE t.user_id = billing_events.user_id
+);
+
+
+
+SELECT t.*, t3.user_id
+FROM tracks t
+LEFT JOIN tracks t3
+ON t.anonymous_id = t3.anonymous_id
+AND t3.user_id <> ''
+WHERE EXISTS (
+  SELECT 1 
+  FROM tracks t2
+  WHERE t2.event = 'signup'
+  AND t.anonymous_id = t2.anonymous_id
+)
+AND NOT EXISTS (
+  SELECT 1
+  FROM tracks t2
+  WHERE t.anonymous_id = t2.anonymous_id
+  AND t2.received_at < t.received_at
+)
+=~=~=~=~=~=~=~=~=~=~=~
+Client
+=~=~=~=~=~=~=~=~=~=~=~
+// Add event listener to all buttons
+
+function addtoev() {
+  var bns = document.getElementsByTagName("button");
+  for (i = 0; i < bns.length; i++) {
+    bns[i].addEventListener("click", function() {
+    alert("you clicked"); });
+  }
+}
+
+window.addEventListener("load",function() {
+  addtoev();
+});
+

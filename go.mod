@@ -4,6 +4,7 @@ go 1.12
 
 require (
 	github.com/cheggaaa/pb/v3 v3.0.3
+	github.com/golang/mock v1.3.1 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/gorilla/handlers v1.4.2
 	github.com/gorilla/mux v1.7.3
@@ -18,4 +19,5 @@ require (
 	gopkg.in/jcmturner/dnsutils.v1 v1.0.1 // indirect
 	gopkg.in/jcmturner/gokrb5.v6 v6.1.1 // indirect
 	gopkg.in/jcmturner/rpc.v1 v1.1.0 // indirect
+	gopkg.in/oleiade/reflections.v1 v1.0.0
 )

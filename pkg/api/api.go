@@ -33,6 +33,24 @@ type KPI struct {
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
+type Conversion struct {
+	ID      int `json:"id" db:"id"`
+	OwnerID int `json:"-" db:"owner_id"`
+	TrackID int `json:"trackId" db:"track_id"`
+	KPIID   int `json:"kpiId" db:"kpi_id"`
+}
+
+type Campaign struct {
+	ID           int       `json:"id" db:"id"`
+	OwnerID      int       `json:"ownerId" db:"owner_id"`
+	Name         string    `json:"name" db:"name"`
+	CreatedAt    time.Time `json:"-" db:"created_at"`
+	CostPerMonth *float64  `json:"costPerMonth" db:"cost_per_month"`
+	// Pattern to match
+	ColumnName  string `json:"columnName" db:"column_name"`
+	ColumnValue string `json:"columnValue" db:"column_value"`
+}
+
 type BillingEvent struct {
 	ID        int       `json:"id" db:"id"`
 	OwnerID   int       `json:"-" db:"owner_id"`
@@ -63,7 +81,7 @@ type TrackService interface {
 
 type KPIService interface {
 	Store(kpi KPI) (int, error)
-	Find() ([]KPI, error)
+	Find(ownerID int) ([]KPI, error)
 	FindByID(id int) (KPI, error)
 	Delete(int) (int64, error)
 }
@@ -71,4 +89,18 @@ type KPIService interface {
 type BillingEventService interface {
 	Store(billingEvent BillingEvent) (int, error)
 	FindByUserID(id int) (BillingEvent, error)
+}
+
+type CampaignService interface {
+	Store(campaign Campaign) (int, error)
+	Update(campaifn Campaign) error
+	Find(ownerID int) ([]Campaign, error)
+	FindByID(id int, ownerID int) (Campaign, error)
+	ScanForNewCampaigns(ownerID int) (int, error)
+}
+
+type ConversionService interface {
+	Store(conversion Conversion) (int, error)
+	Find(ownerID int) ([]Conversion, error)
+	Delete(id int, ownerID int) (int64, error)
 }
