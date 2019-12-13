@@ -44,6 +44,7 @@ func (s CampaignService) Update(campaign api.Campaign) error {
 	return err
 }
 
+// Find finds all campaigns for a user
 func (s CampaignService) Find(ownerID int) ([]api.Campaign, error) {
 	sqlStatement :=
 		`SELECT * FROM public.campaigns
