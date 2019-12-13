@@ -33,6 +33,7 @@ func (s CampaignService) Store(campaign api.Campaign) (int, error) {
 	return id, err
 }
 
+// Update updates a single campaign
 func (s CampaignService) Update(campaign api.Campaign) error {
 	sqlStatement :=
 		fmt.Sprintf(`UPDATE public.campaigns
