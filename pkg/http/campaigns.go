@@ -64,7 +64,7 @@ func (h *Handler) GetOneCampaign(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	kpi, err := h.CampaignService.FindByID(campaignIDInt, mockOwnerID)
+	campaign, err := h.CampaignService.FindByID(campaignIDInt, mockOwnerID)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(w, "An error occurred", http.StatusInternalServerError)
@@ -72,7 +72,7 @@ func (h *Handler) GetOneCampaign(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Marshall response
-	jsonValue, err := json.Marshal(kpi)
+	jsonValue, err := json.Marshal(campaign)
 	if err != nil {
 		log.Printf("ERROR: %v\n", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -101,4 +101,47 @@ func (h *Handler) ScanForNewCampaigns(w http.ResponseWriter, r *http.Request) {
 	// Write data back to client
 	w.WriteHeader(http.StatusOK)
 	w.Write(data)
+}
+
+func (h *Handler) DailyConversionCountCampaign(w http.ResponseWriter, r *http.Request) {
+	// Get var from url
+	vars := mux.Vars(r)
+	campaignIDString := vars["campaign"]
+	// Validate given id
+	if len(campaignIDString) == 0 {
+		http.Error(w, "Must specify id", 400)
+		return
+	}
+	campaignIDInt, err := strconv.Atoi(campaignIDString)
+	if err != nil {
+		http.Error(w, "ID must be a number", 400)
+		return
+	}
+
+	// Find by id
+	campaign, err := h.CampaignService.FindByID(campaignIDInt, mockOwnerID)
+	if err != nil {
+		http.Error(w, "Not found", 404)
+		return
+	}
+
+	// Query for daily conversions
+	dailyConversionCounts, err := h.ConversionService.GetDailyByCampaign(campaign)
+	if err != nil {
+		log.Printf("ERORR: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Marshall response
+	js, err := json.Marshal(dailyConversionCounts)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// Write json back to client
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }

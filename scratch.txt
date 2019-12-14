@@ -96,3 +96,13 @@ window.addEventListener("load",function() {
   addtoev();
 });
 
+=~=~=~=~=~=~=~=~=~=~=~
+Daily conversions for campaign
+=~=~=~=~=~=~=~=~=~=~=~
+
+SELECT date_trunc('day', conversions.created_at) as value, count(*) count
+FROM conversions
+INNER JOIN tracks 
+ON tracks.id = conversions.track_id
+AND tracks.campaign_name = 'Paid Search'
+GROUP BY 1;

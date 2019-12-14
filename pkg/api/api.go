@@ -74,8 +74,7 @@ type TrackService interface {
 	FindByID(id int) (Track, error)
 	GetTopValuesFromColumn(days int, column, table string, extraWheres string) ([]ValueCount, error)
 	GetCountsFromColumn(days int, column, table string) ([]ValueCount, error)
-	GetDailyConversionCountForKPI(kpi KPI) ([]ValueCount, error)
-	GetFirstTouchForKPI(kpi KPI) ([]ValueCount, error)
+	GetFirstTouchCount(kpi KPI) ([]ValueCount, error)
 	// DeleteTrack(id int) error
 }
 
@@ -103,4 +102,5 @@ type ConversionService interface {
 	Store(conversion Conversion) (int, error)
 	Find(ownerID int) ([]Conversion, error)
 	Delete(id int, ownerID int) (int64, error)
+	GetDailyByCampaign(campaign Campaign) ([]ValueCount, error)
 }

@@ -50,7 +50,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/kpis", h.GetKPIs).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}", h.GetOneKPI).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}", h.DeleteKPI).Methods("DELETE")
-	r.HandleFunc("/v1/kpis/{kpi}/daily_conversion_count", h.DailyConversionCount).Methods("GET")
+	// r.HandleFunc("/v1/kpis/{kpi}/daily_conversion_count", h.DailyConversionCountKPI).Methods("GET")
 	r.HandleFunc("/v1/kpis/{kpi}/first_touch", h.FirstTouch).Methods("GET")
 
 	r.HandleFunc("/v1/billing_events", h.NewBillingEvent).Methods("POST")
@@ -59,6 +59,7 @@ func (h *Handler) Serve(addr string) error {
 	r.HandleFunc("/v1/campaigns/scan", h.ScanForNewCampaigns).Methods("GET")
 	r.HandleFunc("/v1/campaigns/{campaign}", h.UpdateCampaign).Methods("PUT")
 	r.HandleFunc("/v1/campaigns/{campaign}", h.GetOneCampaign).Methods("GET")
+	r.HandleFunc("/v1/campaigns/{campaign}/daily_conversions", h.DailyConversionCountCampaign).Methods("GET")
 
 	return http.ListenAndServe(addr, handlers.CORS(handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}), handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}), handlers.AllowedOrigins([]string{"*"}))(r))
 }

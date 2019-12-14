@@ -128,7 +128,7 @@ func (s TrackService) GetDailyConversionCountForKPI(kpi api.KPI) ([]api.ValueCou
 	return vCounts, nil
 }
 
-func (s TrackService) GetFirstTouchForKPI(kpi api.KPI) ([]api.ValueCount, error) {
+func (s TrackService) GetFirstTouchCount(kpi api.KPI) ([]api.ValueCount, error) {
 	sqlStatement := fmt.Sprintf(`
 	SELECT campaign_name as value, count(*) as count
 	FROM tracks t

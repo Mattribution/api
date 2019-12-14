@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -62,4 +63,25 @@ func (s ConversionService) Delete(id int, ownerID int) (int64, error) {
 	}
 
 	return count, nil
+}
+
+// GetDailyByCampaign returns a daily aggregate of conversions for a campaign
+func (s ConversionService) GetDailyByCampaign(campaign api.Campaign) ([]api.ValueCount, error) {
+	sqlStatement :=
+		fmt.Sprintf(`SELECT date_trunc('day', conversions.created_at) as value, count(*) count
+		FROM conversions
+		INNER JOIN tracks 
+		ON tracks.id = conversions.track_id
+		AND tracks.%s = $1
+		WHERE conversions.owner_id = $2
+		AND tracks.owner_id = $2
+		GROUP BY 1;`, campaign.ColumnName)
+
+	conversions := []api.ValueCount{}
+	err := s.DB.Select(&conversions, sqlStatement, campaign.ColumnValue, campaign.OwnerID)
+	if err != nil {
+		log.Printf("ERROR: %s", err)
+	}
+
+	return conversions, nil
 }
