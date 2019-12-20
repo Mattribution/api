@@ -23,23 +23,7 @@ type Track struct {
 	Extra           string    `json:"extra" db:"extra"` // (optional) extra json
 }
 
-type KPI struct {
-	ID        int       `json:"id" db:"id"`
-	OwnerID   int       `json:"-" db:"owner_id"`
-	Column    string    `json:"column" db:"column_name"`
-	Value     string    `json:"value" db:"value"`
-	Name      string    `json:"name" db:"name"`
-	Target    int       `json:"target" db:"target"`
-	CreatedAt time.Time `json:"-" db:"created_at"`
-}
-
-type Conversion struct {
-	ID      int `json:"id" db:"id"`
-	OwnerID int `json:"-" db:"owner_id"`
-	TrackID int `json:"trackId" db:"track_id"`
-	KPIID   int `json:"kpiId" db:"kpi_id"`
-}
-
+// Campaign holds data usually connected to a campaign found in tracks
 type Campaign struct {
 	ID           int       `json:"id" db:"id"`
 	OwnerID      int       `json:"ownerId" db:"owner_id"`
@@ -51,6 +35,30 @@ type Campaign struct {
 	ColumnValue string `json:"columnValue" db:"column_value"`
 }
 
+// KPI stores rules that can be matched on and recorded as conversions
+type KPI struct {
+	ID        int       `json:"id" db:"id"`
+	OwnerID   int       `json:"-" db:"owner_id"`
+	Column    string    `json:"column" db:"column_name"`
+	Value     string    `json:"value" db:"value"`
+	Name      string    `json:"name" db:"name"`
+	Target    int       `json:"target" db:"target"`
+	CreatedAt time.Time `json:"-" db:"created_at"`
+}
+
+func (kpi KPI) IsValid() bool {
+	return len(kpi.Column) > 1 && len(kpi.Value) > 1 && len(kpi.Name) > 1
+}
+
+// Conversion is a specific match for a KPI
+type Conversion struct {
+	ID      int `json:"id" db:"id"`
+	OwnerID int `json:"-" db:"owner_id"`
+	TrackID int `json:"trackId" db:"track_id"`
+	KPIID   int `json:"kpiId" db:"kpi_id"`
+}
+
+// BillingEvent is a structure that holds billing data in order to calculate ROI
 type BillingEvent struct {
 	ID        int       `json:"id" db:"id"`
 	OwnerID   int       `json:"-" db:"owner_id"`
@@ -59,8 +67,11 @@ type BillingEvent struct {
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
-func (kpi KPI) IsValid() bool {
-	return len(kpi.Column) > 1 && len(kpi.Value) > 1 && len(kpi.Name) > 1
+// Weight holds a weight for a key used for recording data for models
+type Weight struct {
+	ID    int32   `json:"id" db:"id"`
+	Key   string  `json:"key" db:"key"`
+	Value float32 `json:"value" db:"value"`
 }
 
 // ValueCount holds a count ascociated with a value
