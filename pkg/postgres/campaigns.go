@@ -18,13 +18,13 @@ type CampaignService struct {
 }
 
 // Store stores the track in the db
-func (s CampaignService) Store(campaign api.Campaign) (int, error) {
+func (s CampaignService) Store(campaign api.Campaign) (int64, error) {
 	sqlStatement :=
 		`INSERT INTO public.campaigns (owner_id, name, column_name, column_value, cost_per_month, created_at)
 	VALUES($1, $2, $3, $4, $5, $6)
 	RETURNING id`
 
-	id := 0
+	var id int64
 	err := s.DB.QueryRow(sqlStatement, campaign.OwnerID, campaign.Name, campaign.ColumnName, campaign.ColumnValue, campaign.CostPerMonth, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		log.Printf("ERROR: %s", err)
@@ -46,7 +46,7 @@ func (s CampaignService) Update(campaign api.Campaign) error {
 }
 
 // Find finds all campaigns for a user
-func (s CampaignService) Find(ownerID int) ([]api.Campaign, error) {
+func (s CampaignService) Find(ownerID int64) ([]api.Campaign, error) {
 	sqlStatement :=
 		`SELECT * FROM public.campaigns
 		WHERE owner_id = $1`
@@ -61,7 +61,7 @@ func (s CampaignService) Find(ownerID int) ([]api.Campaign, error) {
 }
 
 // FindByID finds a single campaign by id
-func (s CampaignService) FindByID(id int, ownerID int) (api.Campaign, error) {
+func (s CampaignService) FindByID(id int64, ownerID int64) (api.Campaign, error) {
 	sqlStatement :=
 		`SELECT * FROM public.campaigns
 		WHERE id = $1
@@ -83,7 +83,7 @@ func (s CampaignService) FindByID(id int, ownerID int) (api.Campaign, error) {
 // ScanForNewCampaigns scans the tracks for any new campaigns and creates new
 //  campaings if it detects a pattern that hasn't been matched.
 //  TODO: optimize this to run on a schedule
-func (s CampaignService) ScanForNewCampaigns(ownerID int) (int, error) {
+func (s CampaignService) ScanForNewCampaigns(ownerID int64) (int64, error) {
 	sqlStatement := `SELECT campaign_name FROM tracks
 	WHERE campaign_name <> ''
 	AND NOT EXISTS (
@@ -102,7 +102,7 @@ func (s CampaignService) ScanForNewCampaigns(ownerID int) (int, error) {
 	}
 
 	// Loop over detected campaign names and create campaigns for them
-	storedCount := 0
+	var storedCount int64
 	for _, campaignName := range newCampaignNames {
 		newCampaign := api.Campaign{
 			OwnerID:     ownerID,

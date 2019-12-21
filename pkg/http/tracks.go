@@ -3,7 +3,6 @@ package http
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"log"
 	"net"
 	"net/http"
@@ -39,11 +38,13 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	track.IP = ip
 
 	// Store raw track
+	// TODO: Make this all a transaction to fail if one can or can't
 	newTrackID, err := h.TrackService.Store(track)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
 	}
+	track.ID = newTrackID
 
 	// TODO: there must be a better way to do this...
 	kpis, err := h.KPIService.Find(mockOwnerID)
@@ -51,26 +52,45 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 		// Get the field name that matches the column patter from the kpi
 		fieldName := utils.GetFieldName(kpi.Column, "db", track)
 		if fieldName == "" { // field wasn't found
-			err := errors.New("Column doesn't exist")
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			panic(err)
 		}
 
 		// Get the value for that field from the track
 		value, err := reflections.GetField(track, fieldName)
 		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			http.Error(w, "Internal error", http.StatusInternalServerError)
 			panic(err)
 		}
 
-		// If match, create conversion
+		// If match
 		if value == kpi.Value {
+			// Create conversion
 			conversion := api.Conversion{
 				OwnerID: mockOwnerID,
-				TrackID: newTrackID,
+				TrackID: track.ID,
 				KPIID:   kpi.ID,
 			}
 			h.ConversionService.Store(conversion)
+
+			// Get all tracks before to distribute weights
+			tracks, err := h.TrackService.GetAllBySameUserBefore(track)
+			if err != nil {
+				http.Error(w, "Internal error", http.StatusInternalServerError)
+				panic(err)
+			}
+
+			if len(tracks) > 0 {
+				// First Touch
+				h.WeightService.Store(api.Weight{
+					OwnerID:   track.OwnerID,
+					KPIID:     kpi.ID,
+					ModelName: "First Touch",
+					Key:       tracks[0].CampaignName,
+					Value:     1,
+				})
+			}
+
 		}
 	}
 

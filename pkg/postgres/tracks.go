@@ -17,7 +17,7 @@ type TrackService struct {
 }
 
 // Store stores the track in the db
-func (s TrackService) Store(t api.Track) (int, error) {
+func (s TrackService) Store(t api.Track) (int64, error) {
 	sqlStatement :=
 		`INSERT INTO public.tracks (owner_id, user_id, anonymous_id, page_url, page_path, page_referrer, page_title, event, campaign_source, campaign_medium, campaign_name, campaign_content, sent_at, received_at, extra)
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
@@ -28,7 +28,7 @@ func (s TrackService) Store(t api.Track) (int, error) {
 		t.Extra = "{}"
 	}
 
-	id := 0
+	var id int64
 	err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.AnonymousID, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, t.SentAt.Format(time.RFC3339), time.Now().Format(time.RFC3339), t.Extra).Scan(&id)
 	if err != nil {
 		return id, err
@@ -38,7 +38,7 @@ func (s TrackService) Store(t api.Track) (int, error) {
 }
 
 // FindByID finds all track objects by owner id
-func (s TrackService) FindByID(id int) (api.Track, error) {
+func (s TrackService) FindByID(id int64) (api.Track, error) {
 	sqlStatement :=
 		`SELECT * from public.tracks
 		WHERE id = $1`
@@ -92,6 +92,21 @@ func (s TrackService) GetTopValuesFromColumn(days int, column, table string, ext
 	}
 
 	return vCounts, nil
+}
+
+// GetAllBySameUserBefore finds all tracks before a certain track for the same user
+func (s TrackService) GetAllBySameUserBefore(track api.Track) ([]api.Track, error) {
+	sqlStatement := `SELECT * FROM tracks
+	WHERE (anonymous_id = $1 OR user_id = $2);
+	AND received_at < $3`
+
+	tracks := []api.Track{}
+	err := s.DB.Select(&tracks, sqlStatement, track.AnonymousID, track.UserID, track.ReceivedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return tracks, nil
 }
 
 // GetCountsFromColumn will group a column and get the count of each unique value

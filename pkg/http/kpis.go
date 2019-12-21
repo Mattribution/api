@@ -76,7 +76,7 @@ func (h *Handler) GetOneKPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return
@@ -112,7 +112,7 @@ func (h *Handler) DeleteKPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return
@@ -193,7 +193,7 @@ func (h *Handler) FirstTouch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return

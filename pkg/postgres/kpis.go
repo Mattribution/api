@@ -16,7 +16,7 @@ type KPIService struct {
 }
 
 // Store stores the track in the db
-func (s KPIService) Store(kpi api.KPI) (int, error) {
+func (s KPIService) Store(kpi api.KPI) (int64, error) {
 	sqlStatement :=
 		`INSERT INTO public.kpis (column_name, value, name, owner_id, target, created_at)
 	VALUES($1, $2, $3, $4, $5, $6)
@@ -26,7 +26,7 @@ func (s KPIService) Store(kpi api.KPI) (int, error) {
 		return 0, errors.New(missingDataErr)
 	}
 
-	id := 0
+	var id int64
 	err := s.DB.QueryRow(sqlStatement, kpi.Column, kpi.Value, kpi.Name, kpi.OwnerID, kpi.Target, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		return id, err
@@ -36,7 +36,7 @@ func (s KPIService) Store(kpi api.KPI) (int, error) {
 }
 
 // FindByID finds all track objects by owner id
-func (s KPIService) FindByID(id int) (api.KPI, error) {
+func (s KPIService) FindByID(id int64) (api.KPI, error) {
 	sqlStatement :=
 		`SELECT * FROM public.kpis
 		WHERE id = $1`
@@ -55,7 +55,7 @@ func (s KPIService) FindByID(id int) (api.KPI, error) {
 }
 
 // Find queries for all kpis (no filter)
-func (s KPIService) Find(ownerID int) ([]api.KPI, error) {
+func (s KPIService) Find(ownerID int64) ([]api.KPI, error) {
 	sqlStatement :=
 		`SELECT * 
 		FROM public.kpis
@@ -72,7 +72,7 @@ func (s KPIService) Find(ownerID int) ([]api.KPI, error) {
 }
 
 // Delete removes a single KPI by id
-func (s KPIService) Delete(id int) (int64, error) {
+func (s KPIService) Delete(id int64) (int64, error) {
 	sqlStatement :=
 		`DELETE FROM public.kpis WHERE id = $1`
 
