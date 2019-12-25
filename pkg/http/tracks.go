@@ -72,8 +72,6 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 		}
 		valueStr := value.(*string)
 
-		dataWasChanged := false
-
 		// If match
 		if *valueStr == kpi.Value {
 
@@ -92,44 +90,18 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 
-			// Parse data json
-			data := make(map[string]api.ModelData)
-			if kpi.Data != nil {
-				if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
-					http.Error(w, "Internal error", http.StatusInternalServerError)
-					panic(err)
-				}
-			}
-
 			// First touch
 			if len(tracks) > 0 {
-				firstTouch, ok := data["firstTouch"]
-				if !ok {
-					firstTouch = api.ModelData{Name: "First Touch", Weights: make(map[string]float32)}
-					data["firstTouch"] = firstTouch
-					dataWasChanged = true
-				}
-
 				campaignName := ""
 				if tracks[0].CampaignName != nil {
 					campaignName = *tracks[0].CampaignName
 				}
-				firstTouch.Weights[campaignName]++
-				dataWasChanged = true
-			}
 
-			// Remarshal if adjusted
-			if dataWasChanged {
-				jsonBytes, err := json.Marshal(data)
-				if err != nil {
-					http.Error(w, "Internal error", http.StatusInternalServerError)
-					panic(err)
-				}
-				kpi.Data = jsonBytes
+				kpi.AdjustWeight("firstTouch", campaignName, 1)
 			}
 		}
 
-		if dataWasChanged {
+		if kpi.DataWasChanged {
 			err = h.KPIService.UpdateData(kpi)
 			if err != nil {
 				log.Printf("ERROR: %v\n", err)

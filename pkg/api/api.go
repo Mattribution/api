@@ -1,6 +1,8 @@
 package api
 
 import (
+	"encoding/json"
+	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx/types"
@@ -40,20 +42,51 @@ type Campaign struct {
 }
 
 type ModelData struct {
-	Name    string             `json:"name"`
 	Weights map[string]float32 `json:"weights"`
 }
 
 // KPI stores rules that can be matched on and recorded as conversions
 type KPI struct {
-	ID        int64          `json:"id" db:"id"`
-	OwnerID   int64          `json:"-" db:"owner_id"`
-	Column    string         `json:"column" db:"column_name"`
-	Value     string         `json:"value" db:"value"`
-	Name      string         `json:"name" db:"name"`
-	Data      types.JSONText `json:"data" db:"data"`
-	Target    int64          `json:"target" db:"target"`
-	CreatedAt time.Time      `json:"-" db:"created_at"`
+	ID             int64          `json:"id" db:"id"`
+	OwnerID        int64          `json:"-" db:"owner_id"`
+	Column         string         `json:"column" db:"column_name"`
+	Value          string         `json:"value" db:"value"`
+	Name           string         `json:"name" db:"name"`
+	Data           types.JSONText `json:"data" db:"data"`
+	Target         int64          `json:"target" db:"target"`
+	CreatedAt      time.Time      `json:"-" db:"created_at"`
+	DataWasChanged bool           `json:"-" db:"-"`
+}
+
+func (kpi *KPI) AdjustWeight(modelName, key string, delta float32) (bool, error) {
+	// Parse data json
+	data := make(map[string]ModelData)
+	if kpi.Data != nil {
+		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
+			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
+		}
+	}
+
+	// (if entry for model doesn't exist create it)
+	modelData, ok := data[modelName]
+	if !ok {
+		modelData = ModelData{Weights: make(map[string]float32)}
+		data[modelName] = modelData
+		kpi.DataWasChanged = true
+	}
+
+	// Update weight with delta
+	modelData.Weights[key] += delta
+
+	// Remarshal and update string
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	kpi.Data = jsonBytes
+	kpi.DataWasChanged = true
+
+	return true, nil
 }
 
 // IsValid checks if a KPI is valid and ok to be created
