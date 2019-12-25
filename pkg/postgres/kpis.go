@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"time"
 
@@ -87,4 +88,16 @@ func (s KPIService) Delete(id int64) (int64, error) {
 	}
 
 	return count, nil
+}
+
+func (s KPIService) UpdateData(kpi api.KPI) error {
+	sqlStatement := `UPDATE kpis
+	SET data = $1
+	WHERE id = $2`
+	jsonString, err := json.Marshal(kpi.Data)
+	if err != nil {
+		return err
+	}
+	_, err = s.DB.Exec(sqlStatement, jsonString, kpi.ID)
+	return err
 }

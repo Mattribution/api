@@ -23,13 +23,8 @@ func (s TrackService) Store(t api.Track) (int64, error) {
 		VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
 		RETURNING id`
 
-	// Set default json value (so postgres doesn't get mad)
-	if t.Extra == "" {
-		t.Extra = "{}"
-	}
-
 	var id int64
-	err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.AnonymousID, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, t.SentAt.Format(time.RFC3339), time.Now().Format(time.RFC3339), t.Extra).Scan(&id)
+	err := s.DB.QueryRow(sqlStatement, t.OwnerID, t.UserID, t.AnonymousID, t.PageURL, t.PagePath, t.PageReferrer, t.PageTitle, t.Event, t.CampaignSource, t.CampaignMedium, t.CampaignName, t.CampaignContent, t.SentAt, time.Now().Format(time.RFC3339), t.Extra).Scan(&id)
 	if err != nil {
 		return id, err
 	}
@@ -97,7 +92,7 @@ func (s TrackService) GetTopValuesFromColumn(days int, column, table string, ext
 // GetAllBySameUserBefore finds all tracks before a certain track for the same user
 func (s TrackService) GetAllBySameUserBefore(track api.Track) ([]api.Track, error) {
 	sqlStatement := `SELECT * FROM tracks
-	WHERE (anonymous_id = $1 OR user_id = $2);
+	WHERE (anonymous_id = $1 OR user_id = $2)
 	AND received_at < $3`
 
 	tracks := []api.Track{}

@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"time"
 
 	"gopkg.in/oleiade/reflections.v1"
 
@@ -25,6 +26,8 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 
 	// Unmarshal
 	track := api.Track{}
+	now := time.Now()
+	track.ReceivedAt = &now
 	if err := json.Unmarshal(data, &track); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
@@ -35,7 +38,7 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 
 	// Grab IP
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	track.IP = ip
+	track.IP = &ip
 
 	// Store raw track
 	// TODO: Make this all a transaction to fail if one can or can't
@@ -48,6 +51,11 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: there must be a better way to do this...
 	kpis, err := h.KPIService.Find(mockOwnerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		panic(err)
+	}
+
 	for _, kpi := range kpis {
 		// Get the field name that matches the column patter from the kpi
 		fieldName := utils.GetFieldName(kpi.Column, "db", track)
@@ -62,9 +70,13 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal error", http.StatusInternalServerError)
 			panic(err)
 		}
+		valueStr := value.(*string)
+
+		dataWasChanged := false
 
 		// If match
-		if value == kpi.Value {
+		if *valueStr == kpi.Value {
+
 			// Create conversion
 			conversion := api.Conversion{
 				OwnerID: mockOwnerID,
@@ -80,17 +92,48 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 				panic(err)
 			}
 
-			if len(tracks) > 0 {
-				// First Touch
-				h.WeightService.Store(api.Weight{
-					OwnerID:   track.OwnerID,
-					KPIID:     kpi.ID,
-					ModelName: "First Touch",
-					Key:       tracks[0].CampaignName,
-					Value:     1,
-				})
+			// Parse data json
+			data := make(map[string]api.ModelData)
+			if kpi.Data != nil {
+				if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
+					http.Error(w, "Internal error", http.StatusInternalServerError)
+					panic(err)
+				}
 			}
 
+			// First touch
+			if len(tracks) > 0 {
+				firstTouch, ok := data["firstTouch"]
+				if !ok {
+					firstTouch = api.ModelData{Name: "First Touch", Weights: make(map[string]float32)}
+					data["firstTouch"] = firstTouch
+					dataWasChanged = true
+				}
+
+				campaignName := ""
+				if tracks[0].CampaignName != nil {
+					campaignName = *tracks[0].CampaignName
+				}
+				firstTouch.Weights[campaignName]++
+				dataWasChanged = true
+			}
+
+			// Remarshal if adjusted
+			if dataWasChanged {
+				jsonBytes, err := json.Marshal(data)
+				if err != nil {
+					http.Error(w, "Internal error", http.StatusInternalServerError)
+					panic(err)
+				}
+				kpi.Data = jsonBytes
+			}
+		}
+
+		if dataWasChanged {
+			err = h.KPIService.UpdateData(kpi)
+			if err != nil {
+				log.Printf("ERROR: %v\n", err)
+			}
 		}
 	}
 

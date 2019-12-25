@@ -1,26 +1,30 @@
 package api
 
-import "time"
+import (
+	"time"
+
+	"github.com/jmoiron/sqlx/types"
+)
 
 // Track is event tracking data in our format
 type Track struct {
-	ID              int64     `json:"id" db:"id"`
-	OwnerID         int64     `json:"ownerId" db:"owner_id"`
-	UserID          string    `json:"userId" db:"user_id"`
-	AnonymousID     string    `json:"anonymousId" db:"anonymous_id"` // fingerprint hash
-	PageURL         string    `json:"pageURL" db:"page_url"`         // optional (website specific)
-	PagePath        string    `json:"pagePath" db:"page_path"`       // optional ()
-	PageTitle       string    `json:"pageTitle" db:"page_title"`
-	PageReferrer    string    `json:"pageReferrer" db:"page_referrer"`
-	Event           string    `json:"event" db:"event"`
-	IP              string    `json:"-" db:"sent_at"`
-	CampaignSource  string    `json:"campaignSource" db:"campaign_source"`
-	CampaignMedium  string    `json:"campaignMedium" db:"campaign_medium"`
-	CampaignName    string    `json:"campaignName" db:"campaign_name"`
-	CampaignContent string    `json:"campaignContent" db:"campaign_content"`
-	ReceivedAt      time.Time `json:"-" db:"received_at"`
-	SentAt          time.Time `json:"sentAt" db:"sent_at"`
-	Extra           string    `json:"extra" db:"extra"` // (optional) extra json
+	ID              int64      `json:"id" db:"id"`
+	OwnerID         int64      `json:"ownerId" db:"owner_id"`
+	UserID          *string    `json:"userId" db:"user_id"`
+	AnonymousID     *string    `json:"anonymousId" db:"anonymous_id"` // fingerprint hash
+	PageURL         *string    `json:"pageURL" db:"page_url"`         // optional (website specific)
+	PagePath        *string    `json:"pagePath" db:"page_path"`       // optional ()
+	PageTitle       *string    `json:"pageTitle" db:"page_title"`
+	PageReferrer    *string    `json:"pageReferrer" db:"page_referrer"`
+	Event           *string    `json:"event" db:"event"`
+	IP              *string    `json:"ip" db:"ip"`
+	CampaignSource  *string    `json:"campaignSource" db:"campaign_source"`
+	CampaignMedium  *string    `json:"campaignMedium" db:"campaign_medium"`
+	CampaignName    *string    `json:"campaignName" db:"campaign_name"`
+	CampaignContent *string    `json:"campaignContent" db:"campaign_content"`
+	ReceivedAt      *time.Time `json:"receivedAt" db:"received_at"`
+	SentAt          *time.Time `json:"sentAt" db:"sent_at"`
+	Extra           *string    `json:"extra" db:"extra"` // (optional) extra json
 }
 
 // Campaign holds data usually connected to a campaign found in tracks
@@ -35,15 +39,21 @@ type Campaign struct {
 	ColumnValue string `json:"columnValue" db:"column_value"`
 }
 
+type ModelData struct {
+	Name    string             `json:"name"`
+	Weights map[string]float32 `json:"weights"`
+}
+
 // KPI stores rules that can be matched on and recorded as conversions
 type KPI struct {
-	ID        int64     `json:"id" db:"id"`
-	OwnerID   int64     `json:"-" db:"owner_id"`
-	Column    string    `json:"column" db:"column_name"`
-	Value     string    `json:"value" db:"value"`
-	Name      string    `json:"name" db:"name"`
-	Target    int64     `json:"target" db:"target"`
-	CreatedAt time.Time `json:"-" db:"created_at"`
+	ID        int64          `json:"id" db:"id"`
+	OwnerID   int64          `json:"-" db:"owner_id"`
+	Column    string         `json:"column" db:"column_name"`
+	Value     string         `json:"value" db:"value"`
+	Name      string         `json:"name" db:"name"`
+	Data      types.JSONText `json:"data" db:"data"`
+	Target    int64          `json:"target" db:"target"`
+	CreatedAt time.Time      `json:"-" db:"created_at"`
 }
 
 // IsValid checks if a KPI is valid and ok to be created
@@ -99,6 +109,7 @@ type KPIService interface {
 	Store(kpi KPI) (int64, error)
 	Find(ownerID int64) ([]KPI, error)
 	FindByID(id int64) (KPI, error)
+	UpdateData(KPI) error
 	Delete(int64) (int64, error)
 }
 
