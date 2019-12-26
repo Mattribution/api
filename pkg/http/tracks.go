@@ -26,8 +26,6 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 
 	// Unmarshal
 	track := api.Track{}
-	now := time.Now()
-	track.ReceivedAt = &now
 	if err := json.Unmarshal(data, &track); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		panic(err)
@@ -35,6 +33,10 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 
 	// TODO: real auth
 	track.OwnerID = mockOwnerID
+
+	// Set received at
+	now := time.Now()
+	track.ReceivedAt = &now
 
 	// Grab IP
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
@@ -49,7 +51,6 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	}
 	track.ID = newTrackID
 
-	// TODO: there must be a better way to do this...
 	kpis, err := h.KPIService.Find(mockOwnerID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
