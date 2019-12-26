@@ -41,10 +41,6 @@ type Campaign struct {
 	ColumnValue string `json:"columnValue" db:"column_value"`
 }
 
-type ModelData struct {
-	Weights map[string]float32 `json:"weights"`
-}
-
 // KPI stores rules that can be matched on and recorded as conversions
 type KPI struct {
 	ID             int64          `json:"id" db:"id"`
@@ -58,6 +54,13 @@ type KPI struct {
 	DataWasChanged bool           `json:"-" db:"-"`
 }
 
+// ModelData is the struct for KPI weight data for a specific model
+type ModelData struct {
+	Weights map[string]float32 `json:"weights"`
+}
+
+// AdjustWeight will adjust the value for a weight for a given model and key.
+//  Creates the weight if it doesn't already exist.
 func (kpi *KPI) AdjustWeight(modelName, key string, delta float32) (bool, error) {
 	// Parse data json
 	data := make(map[string]ModelData)
@@ -77,6 +80,36 @@ func (kpi *KPI) AdjustWeight(modelName, key string, delta float32) (bool, error)
 
 	// Update weight with delta
 	modelData.Weights[key] += delta
+
+	// Remarshal and update string
+	jsonBytes, err := json.Marshal(data)
+	if err != nil {
+		return false, err
+	}
+	kpi.Data = jsonBytes
+	kpi.DataWasChanged = true
+
+	return true, nil
+}
+
+// ClearWeightsForModel removes all weights for a given model
+func (kpi *KPI) ClearWeightsForModel(modelName string) (bool, error) {
+	// Parse data json
+	data := make(map[string]ModelData)
+	if kpi.Data != nil {
+		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
+			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
+		}
+	}
+
+	// If the model entry doesn't exist, do nothing
+	_, ok := data[modelName]
+	if !ok {
+		return false, nil
+	}
+
+	// If the model entry does exist, remove it
+	delete(data, modelName)
 
 	// Remarshal and update string
 	jsonBytes, err := json.Marshal(data)
