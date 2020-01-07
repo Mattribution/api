@@ -54,11 +54,6 @@ type KPI struct {
 	DataWasChanged bool           `json:"-" db:"-"`
 }
 
-// ModelData is the struct for KPI weight data for a specific model
-type ModelData struct {
-	Weights map[string]float32 `json:"weights"`
-}
-
 // AdjustWeight will adjust the value for a weight for a given model and key.
 //  Creates the weight if it doesn't already exist.
 func (kpi *KPI) AdjustWeight(modelName, attribute, key string, delta float32) (bool, error) {
