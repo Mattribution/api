@@ -99,7 +99,7 @@ func (kpi *KPI) AdjustWeight(modelName, attribute, key string, delta float32) (b
 // ClearWeightsForModel removes all weights for a given model
 func (kpi *KPI) ClearWeightsForModel(modelName string) (bool, error) {
 	// Parse data json
-	data := make(map[string]ModelData)
+	data := make(map[string]interface{})
 	if kpi.Data != nil {
 		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
 			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
