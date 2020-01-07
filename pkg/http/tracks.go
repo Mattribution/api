@@ -98,7 +98,7 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 					campaignName = *tracks[0].CampaignName
 				}
 
-				kpi.AdjustWeight("firstTouch", campaignName, 1)
+				kpi.AdjustWeight("firstTouch", "campaignName", campaignName, 1)
 			}
 		}
 

@@ -106,3 +106,23 @@ INNER JOIN tracks
 ON tracks.id = conversions.track_id
 AND tracks.campaign_name = 'Paid Search'
 GROUP BY 1;
+
+
+// Get all weight keys for attribute=campaign_name
+select distinct campaign_name
+from tracks
+where campaign_name <> '';
+
+// Get all weight keys for attribute=campaign_name that DON'T EXIST YET
+select distinct campaign_name
+from tracks
+where campaign_name is not in (
+  // todo query existing weights
+);
+
+// Calculate weight values 
+select distinct campaign_name
+from tracks
+where campaign_name is not in (
+  // todo query existing weights
+);

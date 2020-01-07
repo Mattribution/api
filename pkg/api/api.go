@@ -61,9 +61,10 @@ type ModelData struct {
 
 // AdjustWeight will adjust the value for a weight for a given model and key.
 //  Creates the weight if it doesn't already exist.
-func (kpi *KPI) AdjustWeight(modelName, key string, delta float32) (bool, error) {
+func (kpi *KPI) AdjustWeight(modelName, attribute, key string, delta float32) (bool, error) {
 	// Parse data json
-	data := make(map[string]ModelData)
+	// modelName->attribute->weights
+	data := make(map[string]map[string]map[string]float32)
 	if kpi.Data != nil {
 		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
 			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
@@ -71,15 +72,23 @@ func (kpi *KPI) AdjustWeight(modelName, key string, delta float32) (bool, error)
 	}
 
 	// (if entry for model doesn't exist create it)
-	modelData, ok := data[modelName]
-	if !ok {
-		modelData = ModelData{Weights: make(map[string]float32)}
-		data[modelName] = modelData
+	modelObj, modelObjExists := data[modelName]
+	if !modelObjExists {
+		modelObj = make(map[string]map[string]float32)
+		data[modelName] = modelObj
+		kpi.DataWasChanged = true
+	}
+
+	// (if entry for attribute doesn't exist create it)
+	attributeObj, attributeObjExists := modelObj[attribute]
+	if !attributeObjExists {
+		attributeObj = make(map[string]float32)
+		modelObj[attribute] = attributeObj
 		kpi.DataWasChanged = true
 	}
 
 	// Update weight with delta
-	modelData.Weights[key] += delta
+	attributeObj[key] += delta
 
 	// Remarshal and update string
 	jsonBytes, err := json.Marshal(data)
