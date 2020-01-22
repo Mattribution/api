@@ -22,7 +22,6 @@ const (
 type Handler struct {
 	TrackService        api.TrackService
 	KPIService          api.KPIService
-	WeightService       api.WeightService
 	ConversionService   api.ConversionService
 	BillingEventService api.BillingEventService
 	CampaignService     api.CampaignService

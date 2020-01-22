@@ -8,10 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/oleiade/reflections.v1"
 
 	"github.com/mattribution/api/pkg/api"
-	"github.com/mattribution/api/pkg/utils"
 )
 
 func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
