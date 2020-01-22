@@ -58,7 +58,7 @@ func (h *Handler) GetOneCampaign(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify id", 400)
 		return
 	}
-	campaignIDInt, err := strconv.Atoi(campaignIDString)
+	campaignIDInt, err := strconv.ParseInt(campaignIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "ID must be a number", 400)
 		return
@@ -112,7 +112,7 @@ func (h *Handler) DailyConversionCountCampaign(w http.ResponseWriter, r *http.Re
 		http.Error(w, "Must specify id", 400)
 		return
 	}
-	campaignIDInt, err := strconv.Atoi(campaignIDString)
+	campaignIDInt, err := strconv.ParseInt(campaignIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "ID must be a number", 400)
 		return

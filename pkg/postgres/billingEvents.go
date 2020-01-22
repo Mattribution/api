@@ -16,13 +16,13 @@ type BillingEventService struct {
 }
 
 // Store stores the track in the db
-func (s BillingEventService) Store(billingEvent api.BillingEvent) (int, error) {
+func (s BillingEventService) Store(billingEvent api.BillingEvent) (int64, error) {
 	sqlStatement :=
 		`INSERT INTO public.billing_events (user_id, amount, created_at)
 	VALUES(:user_id, :amount, :created_at)
 	RETURNING id`
 
-	id := 0
+	var id int64
 	billingEvent.CreatedAt = time.Now()
 	err := s.DB.QueryRow(sqlStatement, billingEvent).Scan(&id)
 	if err != nil {
@@ -33,7 +33,7 @@ func (s BillingEventService) Store(billingEvent api.BillingEvent) (int, error) {
 }
 
 // FindByUserID finds all billing events by user_id
-func (s BillingEventService) FindByUserID(userID int) (api.BillingEvent, error) {
+func (s BillingEventService) FindByUserID(userID int64) (api.BillingEvent, error) {
 	sqlStatement :=
 		`SELECT * FROM public.billing_events
 		WHERE user_id = $1`

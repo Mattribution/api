@@ -14,13 +14,13 @@ type ConversionService struct {
 }
 
 // Store stores the conversion in the db
-func (s ConversionService) Store(conversion api.Conversion) (int, error) {
+func (s ConversionService) Store(conversion api.Conversion) (int64, error) {
 	sqlStatement :=
 		`INSERT INTO public.conversions (owner_id, track_id, kpi_id, created_at)
 	VALUES($1, $2, $3, $4)
 	RETURNING id`
 
-	id := 0
+	var id int64
 	err := s.DB.QueryRow(sqlStatement, conversion.OwnerID, conversion.TrackID, conversion.KPIID, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		return id, err
@@ -30,7 +30,7 @@ func (s ConversionService) Store(conversion api.Conversion) (int, error) {
 }
 
 // Find all conversions for a user
-func (s ConversionService) Find(ownerID int) ([]api.Conversion, error) {
+func (s ConversionService) Find(ownerID int64) ([]api.Conversion, error) {
 	sqlStatement :=
 		`SELECT * FROM public.conversions
 		WHERE owner_id = $1`
@@ -45,7 +45,7 @@ func (s ConversionService) Find(ownerID int) ([]api.Conversion, error) {
 }
 
 // Delete removes a single conversion by id
-func (s ConversionService) Delete(id int, ownerID int) (int64, error) {
+func (s ConversionService) Delete(id int64, ownerID int64) (int64, error) {
 	sqlStatement :=
 		`DELETE 
 		FROM public.conversions 

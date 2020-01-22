@@ -76,7 +76,7 @@ func (h *Handler) GetOneKPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return
@@ -112,7 +112,7 @@ func (h *Handler) DeleteKPI(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return
@@ -140,49 +140,6 @@ func (h *Handler) DeleteKPI(w http.ResponseWriter, r *http.Request) {
 	w.Write(js)
 }
 
-// func (h *Handler) DailyConversionCountKPI(w http.ResponseWriter, r *http.Request) {
-// 	// Get pixel data from client
-// 	vars := mux.Vars(r)
-// 	kpiIDString := vars["kpi"]
-
-// 	// Validate given kpi
-// 	if len(kpiIDString) == 0 {
-// 		http.Error(w, "Must specify kpi", 400)
-// 		return
-// 	}
-// 	kpiIDInt, err := strconv.Atoi(kpiIDString)
-// 	if err != nil {
-// 		http.Error(w, "KPI ID must be a number", 400)
-// 		return
-// 	}
-
-// 	kpi, err := h.KPIService.FindByID(kpiIDInt)
-// 	if err != nil {
-// 		http.Error(w, "Not found", 404)
-// 		return
-// 	}
-
-// 	// Query
-// 	dailyConversionCounts, err := h.TrackService.GetDailyConversionCountForKPI(kpi)
-// 	if err != nil {
-// 		log.Printf("ERORR: %v", err)
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Marshall response
-// 	js, err := json.Marshal(dailyConversionCounts)
-// 	if err != nil {
-// 		log.Printf("ERROR: %v\n", err)
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Write json back to client
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(js)
-// }
-
 func (h *Handler) FirstTouch(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
 	vars := mux.Vars(r)
@@ -193,7 +150,7 @@ func (h *Handler) FirstTouch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Must specify kpi", 400)
 		return
 	}
-	kpiIDInt, err := strconv.Atoi(kpiIDString)
+	kpiIDInt, err := strconv.ParseInt(kpiIDString, 10, 64)
 	if err != nil {
 		http.Error(w, "KPI ID must be a number", 400)
 		return
