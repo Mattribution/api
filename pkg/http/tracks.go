@@ -51,65 +51,6 @@ func (h *Handler) NewTrack(w http.ResponseWriter, r *http.Request) {
 	}
 	track.ID = newTrackID
 
-	kpis, err := h.KPIService.Find(mockOwnerID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		panic(err)
-	}
-
-	for _, kpi := range kpis {
-		// Get the field name that matches the column patter from the kpi
-		fieldName := utils.GetFieldName(kpi.Column, "db", track)
-		if fieldName == "" { // field wasn't found
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			panic(err)
-		}
-
-		// Get the value for that field from the track
-		value, err := reflections.GetField(track, fieldName)
-		if err != nil {
-			http.Error(w, "Internal error", http.StatusInternalServerError)
-			panic(err)
-		}
-		valueStr := value.(*string)
-
-		// If match
-		if *valueStr == kpi.Value {
-
-			// Create conversion
-			conversion := api.Conversion{
-				OwnerID: mockOwnerID,
-				TrackID: track.ID,
-				KPIID:   kpi.ID,
-			}
-			h.ConversionService.Store(conversion)
-
-			// Get all tracks before to distribute weights
-			tracks, err := h.TrackService.GetAllBySameUserBefore(track)
-			if err != nil {
-				http.Error(w, "Internal error", http.StatusInternalServerError)
-				panic(err)
-			}
-
-			// First touch
-			if len(tracks) > 0 {
-				campaignName := ""
-				if tracks[0].CampaignName != nil {
-					campaignName = *tracks[0].CampaignName
-				}
-
-				kpi.AdjustWeight("firstTouch", "campaignName", campaignName, 1)
-			}
-		}
-
-		if kpi.DataWasChanged {
-			err = h.KPIService.UpdateData(kpi)
-			if err != nil {
-				log.Printf("ERROR: %v\n", err)
-			}
-		}
-	}
-
 	// Write gif back to client
 	w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
 	w.Header().Set("Content-Type", "image/gif")

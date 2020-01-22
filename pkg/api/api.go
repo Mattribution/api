@@ -1,8 +1,6 @@
 package api
 
 import (
-	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/jmoiron/sqlx/types"
@@ -54,78 +52,6 @@ type KPI struct {
 	DataWasChanged bool           `json:"-" db:"-"`
 }
 
-// AdjustWeight will adjust the value for a weight for a given model and key.
-//  Creates the weight if it doesn't already exist.
-func (kpi *KPI) AdjustWeight(modelName, attribute, key string, delta float32) (bool, error) {
-	// Parse data json
-	// modelName->attribute->weights
-	data := make(map[string]map[string]map[string]float32)
-	if kpi.Data != nil {
-		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
-			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
-		}
-	}
-
-	// (if entry for model doesn't exist create it)
-	modelObj, modelObjExists := data[modelName]
-	if !modelObjExists {
-		modelObj = make(map[string]map[string]float32)
-		data[modelName] = modelObj
-		kpi.DataWasChanged = true
-	}
-
-	// (if entry for attribute doesn't exist create it)
-	attributeObj, attributeObjExists := modelObj[attribute]
-	if !attributeObjExists {
-		attributeObj = make(map[string]float32)
-		modelObj[attribute] = attributeObj
-		kpi.DataWasChanged = true
-	}
-
-	// Update weight with delta
-	attributeObj[key] += delta
-
-	// Remarshal and update string
-	jsonBytes, err := json.Marshal(data)
-	if err != nil {
-		return false, err
-	}
-	kpi.Data = jsonBytes
-	kpi.DataWasChanged = true
-
-	return true, nil
-}
-
-// ClearWeightsForModel removes all weights for a given model
-func (kpi *KPI) ClearWeightsForModel(modelName string) (bool, error) {
-	// Parse data json
-	data := make(map[string]interface{})
-	if kpi.Data != nil {
-		if err := json.Unmarshal([]byte(kpi.Data), &data); err != nil {
-			log.Println("ERROR: could not unmarshal kpi weights, resetting entire object")
-		}
-	}
-
-	// If the model entry doesn't exist, do nothing
-	_, ok := data[modelName]
-	if !ok {
-		return false, nil
-	}
-
-	// If the model entry does exist, remove it
-	delete(data, modelName)
-
-	// Remarshal and update string
-	jsonBytes, err := json.Marshal(data)
-	if err != nil {
-		return false, err
-	}
-	kpi.Data = jsonBytes
-	kpi.DataWasChanged = true
-
-	return true, nil
-}
-
 // IsValid checks if a KPI is valid and ok to be created
 func (kpi KPI) IsValid() bool {
 	return len(kpi.Column) > 1 && len(kpi.Value) > 1 && len(kpi.Name) > 1
@@ -145,17 +71,6 @@ type BillingEvent struct {
 	OwnerID   int64     `json:"-" db:"owner_id"`
 	UserID    int64     `json:"userId" db:"user_id"`
 	Amount    float32   `json:"amount" db:"amount"`
-	CreatedAt time.Time `json:"-" db:"created_at"`
-}
-
-// Weight holds a weight for a model for a given KPI
-type Weight struct {
-	ID        int64     `json:"id" db:"id"`
-	OwnerID   int64     `json:"-" db:"owner_id"`
-	KPIID     int64     `json:"kpiId" db:"kpi_id"`
-	ModelName string    `json:"modelName" db:"model_name"`
-	Key       string    `json:"key" db:"key"`
-	Value     float32   `json:"value" db:"value"`
 	CreatedAt time.Time `json:"-" db:"created_at"`
 }
 
@@ -181,11 +96,6 @@ type KPIService interface {
 	FindByID(id int64) (KPI, error)
 	UpdateData(KPI) error
 	Delete(int64) (int64, error)
-}
-
-type WeightService interface {
-	Store(weight Weight) (int64, error)
-	FindByKpiAndModelName(ownerID int64, kpiID int64, modelName string) ([]Weight, error)
 }
 
 type BillingEventService interface {

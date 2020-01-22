@@ -6,56 +6,23 @@ import (
 	"github.com/mattribution/api/pkg/api"
 )
 
-func TestAdjustWeightAddOne(t *testing.T) {
+func TestInvalidKPI(t *testing.T) {
 	kpi := api.KPI{}
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	expectedDataStr := `{"firstTouch":{"campaignName":{"mock-key":1}}}`
-	gotStr := kpi.Data.String()
-	if gotStr != expectedDataStr {
-		t.Errorf("Expected %v, got %v", expectedDataStr, gotStr)
+	expected := false
+	got := kpi.IsValid()
+	if expected != got {
+		t.Errorf("Expected %v, got %v", expected, got)
 	}
 }
 
-func TestAdjustWeightAddTwice(t *testing.T) {
-	kpi := api.KPI{}
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	expectedDataStr := `{"firstTouch":{"campaignName":{"mock-key":2}}}`
-	gotStr := kpi.Data.String()
-	if gotStr != expectedDataStr {
-		t.Errorf("Expected %v, got %v", expectedDataStr, gotStr)
+func TestValidKPI(t *testing.T) {
+	kpi := api.KPI{
+		Column: "test",
+		Value:  "test",
 	}
-}
-
-func TestAdjustWeightMultipleKeys(t *testing.T) {
-	kpi := api.KPI{}
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key-2", 1)
-	expectedDataStr := `{"firstTouch":{"campaignName":{"mock-key":1,"mock-key-2":1}}}`
-	gotStr := kpi.Data.String()
-	if gotStr != expectedDataStr {
-		t.Errorf("Expected %v, got %v", expectedDataStr, gotStr)
-	}
-}
-
-func TestAdjustWeightNegative(t *testing.T) {
-	kpi := api.KPI{}
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", -1)
-	expectedDataStr := `{"firstTouch":{"campaignName":{"mock-key":0}}}`
-	gotStr := kpi.Data.String()
-	if gotStr != expectedDataStr {
-		t.Errorf("Expected %v, got %v", expectedDataStr, gotStr)
-	}
-}
-
-func TestClearWeightsForModel(t *testing.T) {
-	kpi := api.KPI{}
-	kpi.AdjustWeight("firstTouch", "campaignName", "mock-key", 1)
-	kpi.ClearWeightsForModel("firstTouch")
-	expectedDataStr := `{}`
-	gotStr := kpi.Data.String()
-	if gotStr != expectedDataStr {
-		t.Errorf("Expected %v, got %v", expectedDataStr, gotStr)
+	expected := false
+	got := kpi.IsValid()
+	if expected != got {
+		t.Errorf("Expected %v, got %v", expected, got)
 	}
 }
