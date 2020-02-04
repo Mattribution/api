@@ -126,3 +126,14 @@ from tracks
 where campaign_name is not in (
   // todo query existing weights
 );
+
+SELECT *, count(*)
+FROM (
+  SELECT t.campaign_name,
+  ROW_NUMBER() OVER (PARTITION BY anonymous_id ORDER BY sent_at) AS position
+  FROM tracks AS t
+  WHERE campaign_name <> ''
+  AND t.sent_at < (SELECT sent_at FROM tracks t2 WHERE t2.event = 'signup' AND t.anonymous_id = t2.anonymous_id)
+) as tracks
+GROUP BY position, campaign_name
+ORDER BY position;
