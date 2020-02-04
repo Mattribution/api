@@ -1,8 +1,0 @@
-curl -X POST -H "Content-Type: application/json" -d '{"name": "Signup", "column": "event", "value": "signup", "target": 100}' localhost:3001/v1/kpis
-
-{"event": "pageView", "campaignName": "Paid Search", "anonymousId": "asdf"}
-curl -X GET "localhost:3001/v1/pixel/track?data=eyJldmVudCI6ICJwYWdlVmlldyIsICJjYW1wYWlnbk5hbWUiOiAiUGFpZCBTZWFyY2giLCAiYW5vbnltb3VzSWQiOiAiYXNkZiJ9"
-
-{"event": "signup", "campaignName": "", "anonymousId": "asdf"}
-curl -X GET "localhost:3001/v1/pixel/track?data=eyJldmVudCI6ICJzaWdudXAiLCAiY2FtcGFpZ25OYW1lIjogIiIsICJhbm9ueW1vdXNJZCI6ICJhc2RmIn0="
-
