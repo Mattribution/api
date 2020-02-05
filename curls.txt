@@ -1,0 +1,1 @@
+curl -X GET "http://us-central1-mattribution.cloudfunctions.net/v1/tracks/new?data=eyJldmVudCI6ICJwYWdlVmlldyIsICJjYW1wYWlnbk5hbWUiOiAiUGFpZCBTZWFyY2giLCAiYW5vbnltb3VzSWQiOiAiYXNkZiJ9"
