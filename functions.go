@@ -13,14 +13,24 @@ import (
 	"github.com/mattribution/api/internal/pkg/postgres"
 )
 
+type Handler struct {
+	Tracks app.Tracks
+}
+
+const (
+	newTrackPath               = "/tracks/new"
+	invalidRequestError        = "The request you sent is invalid. Please reformat the request and try again."
+	invalidBase64EncodingError = "The data sent was not Base64 encoded. Please encode the data and try again."
+)
+
 var (
-	mux    *http.ServeMux
-	tracks *postgres.Tracks
-	gif    = []byte{
+	gif = []byte{
 		71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0,
 		255, 255, 255, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0,
 		1, 0, 1, 0, 0, 2, 1, 68, 0, 59,
 	}
+	mux     *http.ServeMux
+	handler *Handler
 )
 
 func init() {
@@ -28,10 +38,6 @@ func init() {
 	dbPass := os.Getenv("DB_PASS")
 	dbName := os.Getenv("DB_NAME")
 	CSQLInstanceConnectionName := os.Getenv("CSQL_INSTANCE_CONNECTION_NAME")
-
-	// Setup router
-	mux = http.NewServeMux()
-	mux.HandleFunc("/tracks/new", newTrack)
 
 	// Setup db connection
 	db, err := postgres.NewCloudSQLClient(dbUser, dbPass, dbName, CSQLInstanceConnectionName)
@@ -43,9 +49,15 @@ func init() {
 	db.SetMaxOpenConns(1)
 
 	// Setup services
-	tracks = &postgres.Tracks{
-		DB: db,
+	handler = &Handler{
+		Tracks: &postgres.Tracks{
+			DB: db,
+		},
 	}
+
+	// Setup router
+	mux = http.NewServeMux()
+	mux.HandleFunc(newTrackPath, handler.newTrack)
 }
 
 // FunctionsEntrypoint represents cloud function entry point
@@ -53,13 +65,17 @@ func FunctionsEntrypoint(w http.ResponseWriter, r *http.Request) {
 	mux.ServeHTTP(w, r)
 }
 
-func newTrack(w http.ResponseWriter, r *http.Request) {
+// ~=~=~=~=~=~=~=~=
+// Tracks
+// ~=~=~=~=~=~=~=~=
+
+func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
 	v := r.URL.Query()
 	rawEvent := v.Get("data")
 	data, err := base64.StdEncoding.DecodeString(rawEvent)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, invalidBase64EncodingError, http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
@@ -67,22 +83,21 @@ func newTrack(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal
 	track := app.Track{}
 	if err := json.Unmarshal(data, &track); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
 	// Set received at
 	now := time.Now()
-	track.ReceivedAt = &now
+	track.CreatedAt = &now
 
 	// Grab IP
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
 	track.IP = &ip
 
 	// Store raw track
-	// TODO: Make this all a transaction to fail if one can or can't
-	newTrackID, err := tracks.Store(track)
+	newTrackID, err := h.Tracks.Store(track)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println(err)
@@ -95,3 +110,7 @@ func newTrack(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "image/gif")
 	w.Write(gif)
 }
+
+// ~=~=~=~=~=~=~=~=
+// Kpis
+// ~=~=~=~=~=~=~=~=
