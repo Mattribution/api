@@ -7,7 +7,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/mattribution/api/internal/app"
 	"github.com/mattribution/api/internal/pkg/postgres"
@@ -83,18 +82,14 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	// Unmarshal
 	track := app.Track{}
 	if err := json.Unmarshal(data, &track); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, invalidRequestError, http.StatusBadRequest)
 		log.Println(err)
 		return
 	}
 
-	// Set received at
-	now := time.Now()
-	track.CreatedAt = &now
-
 	// Grab IP
 	ip, _, _ := net.SplitHostPort(r.RemoteAddr)
-	track.IP = &ip
+	track.IP = ip
 
 	// Store raw track
 	newTrackID, err := h.Tracks.Store(track)
