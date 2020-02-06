@@ -41,5 +41,6 @@ type Tracks interface {
 
 type Kpis interface {
 	Store(kpi Kpi) (int64, error)
+	FindByOwnerID(ownerID int64) ([]Kpi, error)
 	Delete(id int64, ownerID int64) (int64, error)
 }

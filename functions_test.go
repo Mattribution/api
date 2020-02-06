@@ -249,10 +249,11 @@ func TestDeleteKpi(t *testing.T) {
 
 		id := 1
 		data := "1"
+		ownerID := 0
 		expectedStatus := http.StatusInternalServerError
 		expectedBody := internalError
 
-		kpis.EXPECT().Delete(int64(id), int64(0)).Times(1).Return(int64(0), errors.New(""))
+		kpis.EXPECT().Delete(int64(id), int64(ownerID)).Times(1).Return(int64(0), errors.New(""))
 
 		// Compose request
 		req, err := http.NewRequest("DELETE", fmt.Sprintf("/kpis/%s", data), strings.NewReader(data))
@@ -290,16 +291,20 @@ func TestDeleteKpi(t *testing.T) {
 
 		id := 1
 		data := "1"
+		ownerID := 0
 		expectedStatus := http.StatusOK
 		expectedBody := data
 
-		kpis.EXPECT().Delete(int64(id), int64(0)).Times(1).Return(int64(1), nil)
+		kpis.EXPECT().Delete(int64(id), int64(ownerID)).Times(1).Return(int64(1), nil)
 
 		// Compose request
 		req, err := http.NewRequest("DELETE", fmt.Sprintf("/kpis/%s", data), strings.NewReader(data))
 		if err != nil {
 			t.Fatal(err)
 		}
+		q := req.URL.Query()
+		q.Add("ownerID", string(ownerID))
+		req.URL.RawQuery = q.Encode()
 
 		// Create response recorder and http handler
 		rr := httptest.NewRecorder()

@@ -69,17 +69,41 @@ func (s *Kpis) Store(kpi app.Kpi) (int64, error) {
 	return id, nil
 }
 
+func (s *Kpis) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {
+	sqlStatement :=
+		`SELECT * FROM public.kpis 
+		AND owner_id = $2`
+
+	var kpis []app.Kpi
+
+	rows, err := s.DB.Query(sqlStatement)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var kpi app.Kpi
+		if err := rows.Scan(&kpi); err != nil {
+			return nil, err
+		}
+		kpis = append(kpis, kpi)
+	}
+
+	return kpis, nil
+}
+
 func (s Kpis) Delete(id int64, ownerID int64) (int64, error) {
 	sqlStatement :=
 		`DELETE FROM public.kpis 
 		WHERE id = $1
 		AND owner_id = $2`
 
-	// TODO: Get remove count from this?
 	res, err := s.DB.Exec(sqlStatement, id, ownerID)
 	if err != nil {
 		return 0, err
 	}
+
 	count, err := res.RowsAffected()
 	if err != nil {
 		return 0, err

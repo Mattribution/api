@@ -86,6 +86,21 @@ func (mr *MockKpisMockRecorder) Store(kpi interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Store", reflect.TypeOf((*MockKpis)(nil).Store), kpi)
 }
 
+// FindByOwnerID mocks base method
+func (m *MockKpis) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FindByOwnerID", ownerID)
+	ret0, _ := ret[0].([]app.Kpi)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FindByOwnerID indicates an expected call of FindByOwnerID
+func (mr *MockKpisMockRecorder) FindByOwnerID(ownerID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindByOwnerID", reflect.TypeOf((*MockKpis)(nil).FindByOwnerID), ownerID)
+}
+
 // Delete mocks base method
 func (m *MockKpis) Delete(id, ownerID int64) (int64, error) {
 	m.ctrl.T.Helper()

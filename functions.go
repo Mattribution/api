@@ -1,6 +1,7 @@
 package functions
 
 import (
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -21,11 +22,14 @@ type Handler struct {
 	Kpis   app.Kpis
 }
 
+type ContextKey string
+
 const (
-	invalidRequestError        = "The request you sent is invalid. Please reformat the request and try again."
-	invalidBase64EncodingError = "The data sent was not Base64 encoded. Please encode the data and try again."
-	internalError              = "We experienced an internal error. Please try again later."
-	mockOwnerID                = 0
+	invalidRequestError                   = "The request you sent is invalid. Please reformat the request and try again."
+	invalidBase64EncodingError            = "The data sent was not Base64 encoded. Please encode the data and try again."
+	internalError                         = "We experienced an internal error. Please try again later."
+	mockOwnerID                int64      = 0
+	ContextKeyOwnerID          ContextKey = "ownerID"
 )
 
 var (
@@ -67,12 +71,22 @@ func init() {
 	router = handler.Router()
 }
 
+func (handler *Handler) AuthMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyOwnerID, mockOwnerID)
+		// Call the next handler, which can be another middleware in the chain, or the final handler.
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
 // Router generates the routes
 func (handler *Handler) Router() *mux.Router {
 	router := mux.NewRouter()
 	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
 	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", handler.deleteKpi).Methods("DELETE")
+	router.Use(handler.AuthMiddleware)
 	return router
 }
 
@@ -155,14 +169,23 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idString := vars["id"]
+	ownerIDInterface := r.Context().Value(ContextKeyOwnerID)
+	log.Println(ownerIDInterface)
+
+	ownerID, ok := ownerIDInterface.(int64)
+	if !ok {
+		http.Error(w, "owner id error", http.StatusBadRequest)
+		return
+	}
 
 	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {
-		http.Error(w, invalidRequestError, http.StatusBadRequest)
+		http.Error(w, "id error", http.StatusBadRequest)
+		return
 	}
 
 	// Delete KPI
-	deleted, err := h.Kpis.Delete(id, mockOwnerID)
+	deleted, err := h.Kpis.Delete(id, ownerID)
 	if err != nil {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
@@ -173,4 +196,26 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 	s := strconv.FormatInt(deleted, 10)
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, s)
+}
+
+func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
+	ownerIDString := r.Context().Value("ownerID").(string)
+
+	ownerID, err := strconv.ParseInt(ownerIDString, 10, 64)
+	if err != nil {
+		http.Error(w, invalidRequestError, http.StatusBadRequest)
+	}
+
+	// Get Kpis
+	kpis, err := h.Kpis.FindByOwnerID(ownerID)
+	if err != nil {
+		http.Error(w, internalError, http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Response
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(kpis)
 }
