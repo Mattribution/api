@@ -2,11 +2,14 @@ package functions
 
 import (
 	"encoding/base64"
+	"encoding/binary"
 	"encoding/json"
 	"log"
 	"net"
 	"net/http"
 	"os"
+
+	"github.com/gorilla/mux"
 
 	"github.com/mattribution/api/internal/app"
 	"github.com/mattribution/api/internal/pkg/postgres"
@@ -14,10 +17,10 @@ import (
 
 type Handler struct {
 	Tracks app.Tracks
+	Kpis   app.Kpis
 }
 
 const (
-	newTrackPath               = "/tracks/new"
 	invalidRequestError        = "The request you sent is invalid. Please reformat the request and try again."
 	invalidBase64EncodingError = "The data sent was not Base64 encoded. Please encode the data and try again."
 )
@@ -28,7 +31,7 @@ var (
 		255, 255, 255, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0,
 		1, 0, 1, 0, 0, 2, 1, 68, 0, 59,
 	}
-	mux     *http.ServeMux
+	router  *mux.Router
 	handler *Handler
 )
 
@@ -55,8 +58,9 @@ func init() {
 	}
 
 	// Setup router
-	mux = http.NewServeMux()
-	mux.HandleFunc(newTrackPath, handler.newTrack)
+	router = mux.NewRouter()
+	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
+	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
 }
 
 // FunctionsEntrypoint represents cloud function entry point
@@ -109,3 +113,28 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 // ~=~=~=~=~=~=~=~=
 // Kpis
 // ~=~=~=~=~=~=~=~=
+
+func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
+	var kpi app.Kpi
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&kpi)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Store KPI
+	newKpiID, err := h.Kpis.Store(kpi)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Return new ID
+	w.WriteHeader(http.StatusOK)
+	b := make([]byte, 8)
+	binary.LittleEndian.PutUint64(b, uint64(newKpiID))
+	w.Write(b)
+}

@@ -149,3 +149,43 @@ func TestNewTrack(t *testing.T) {
 	})
 
 }
+
+func TestNewKpi(t *testing.T) {
+
+	t.Run("NewKPI responds with 400 DATA FORMAT if incorrectly formatted data", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		handler := Handler{
+			Tracks: mock_app.NewMockTracks(ctrl),
+		}
+
+		data := "{"
+		expectedStatus := http.StatusBadRequest
+		expectedBody := invalidBase64EncodingError
+
+		// Compose request
+		req, err := http.NewRequest("POST", "/kpis", strings.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Create response recorder and http handler
+		rr := httptest.NewRecorder()
+		httphandler := http.HandlerFunc(handler.newKpi)
+
+		// Execute request
+		httphandler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != expectedStatus {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, expectedStatus)
+		}
+
+		bodyStr := strings.TrimSpace(rr.Body.String())
+		if bodyStr != expectedBody {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bodyStr, expectedBody)
+		}
+
+		ctrl.Finish()
+	})
+}
