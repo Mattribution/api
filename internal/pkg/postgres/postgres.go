@@ -68,3 +68,22 @@ func (s *Kpis) Store(kpi app.Kpi) (int64, error) {
 
 	return id, nil
 }
+
+func (s Kpis) Delete(id int64, ownerID int64) (int64, error) {
+	sqlStatement :=
+		`DELETE FROM public.kpis 
+		WHERE id = $1
+		AND owner_id = $2`
+
+	// TODO: Get remove count from this?
+	res, err := s.DB.Exec(sqlStatement, id, ownerID)
+	if err != nil {
+		return 0, err
+	}
+	count, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}

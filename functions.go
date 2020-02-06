@@ -25,6 +25,7 @@ const (
 	invalidRequestError        = "The request you sent is invalid. Please reformat the request and try again."
 	invalidBase64EncodingError = "The data sent was not Base64 encoded. Please encode the data and try again."
 	internalError              = "We experienced an internal error. Please try again later."
+	mockOwnerID                = 0
 )
 
 var (
@@ -63,6 +64,7 @@ func init() {
 	router = mux.NewRouter()
 	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
 	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
+	router.HandleFunc("/kpis/{id:[0-9]+}", handler.deleteKpi).Methods("DELETE")
 }
 
 // FunctionsEntrypoint represents cloud function entry point
@@ -135,8 +137,31 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Return new ID
+	// Response
 	s := strconv.FormatInt(newKpiID, 10)
+	w.WriteHeader(http.StatusOK)
+	fmt.Fprintf(w, s)
+}
+
+func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	idString := vars["id"]
+
+	id, err := strconv.ParseInt(idString, 10, 64)
+	if err != nil {
+		http.Error(w, invalidRequestError, http.StatusBadRequest)
+	}
+
+	// Delete KPI
+	deleted, err := h.Kpis.Delete(id, mockOwnerID)
+	if err != nil {
+		http.Error(w, internalError, http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Response
+	s := strconv.FormatInt(deleted, 10)
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, s)
 }
