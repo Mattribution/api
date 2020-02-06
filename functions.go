@@ -46,10 +46,10 @@ func init() {
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASS")
 	dbName := os.Getenv("DB_NAME")
-	CSQLInstanceConnectionName := os.Getenv("CSQL_INSTANCE_CONNECTION_NAME")
+	dbHost := os.Getenv("DB_HOST")
 
 	// Setup db connection
-	db, err := postgres.NewCloudSQLClient(dbUser, dbPass, dbName, CSQLInstanceConnectionName)
+	db, err := postgres.NewCloudSQLClient(dbUser, dbPass, dbName, dbHost)
 	if err != nil {
 		panic(err)
 	}
@@ -86,6 +86,7 @@ func (handler *Handler) Router() *mux.Router {
 	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
 	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", handler.deleteKpi).Methods("DELETE")
+	router.HandleFunc("/kpis", handler.listKpis).Methods("GET")
 	router.Use(handler.AuthMiddleware)
 	return router
 }
@@ -126,7 +127,7 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	newTrackID, err := h.Tracks.Store(track)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println(err)
+		log.Println("Error storing track: ", err)
 		return
 	}
 	track.ID = newTrackID
@@ -199,12 +200,7 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
-	ownerIDString := r.Context().Value("ownerID").(string)
-
-	ownerID, err := strconv.ParseInt(ownerIDString, 10, 64)
-	if err != nil {
-		http.Error(w, invalidRequestError, http.StatusBadRequest)
-	}
+	ownerID := r.Context().Value(ContextKeyOwnerID).(int64)
 
 	// Get Kpis
 	kpis, err := h.Kpis.FindByOwnerID(ownerID)
@@ -212,6 +208,11 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
 		return
+	}
+
+	// Format
+	if kpis == nil {
+		kpis = []app.Kpi{}
 	}
 
 	// Response

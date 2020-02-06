@@ -1,1 +1,9 @@
 curl -X GET "http://us-central1-mattribution.cloudfunctions.net/v1/tracks/new?data=eyJldmVudCI6ICJwYWdlVmlldyIsICJjYW1wYWlnbk5hbWUiOiAiUGFpZCBTZWFyY2giLCAiYW5vbnltb3VzSWQiOiAiYXNkZiJ9"
+
+curl -X GET "http://localhost:3001/tracks/new?data=eyJldmVudCI6ICJwYWdlVmlldyIsICJjYW1wYWlnbk5hbWUiOiAiUGFpZCBTZWFyY2giLCAiYW5vbnltb3VzSWQiOiAiYXNkZiJ9"
+
+
+curl --header "Content-Type: application/json" \
+  --request POST \
+  --data '{"name":"My Kpi", "column": "event", "value": "signup" }' \
+  http://localhost:3001/kpis

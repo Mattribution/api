@@ -19,7 +19,6 @@ type Track struct {
 	CampaignName    string    `json:"campaignName" db:"campaign_name"`
 	CampaignContent string    `json:"campaignContent" db:"campaign_content"`
 	SentAt          time.Time `json:"sentAt" db:"sent_at"`
-	Extra           string    `json:"extra" db:"extra"` // (optional) extra json
 	CreatedAt       time.Time `json:"createdAt" db:"created_at"`
 }
 
@@ -31,7 +30,7 @@ type Kpi struct {
 	Target                 int64     `json:"target" db:"target"`
 	DataWasChanged         bool      `json:"-" db:"-"`
 	PatternMatchColumnName string    `json:"column" db:"pattern_match_column_name"`
-	PatternMatchValue      string    `json:"value" db:"pattern_match_row_value"`
+	PatternMatchRowValue   string    `json:"value" db:"pattern_match_row_value"`
 	CreatedAt              time.Time `json:"-" db:"created_at"`
 }
 
