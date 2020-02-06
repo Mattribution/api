@@ -58,13 +58,22 @@ func init() {
 		Tracks: &postgres.Tracks{
 			DB: db,
 		},
+		Kpis: &postgres.Kpis{
+			DB: db,
+		},
 	}
 
 	// Setup router
-	router = mux.NewRouter()
+	router = handler.Router()
+}
+
+// Router generates the routes
+func (handler *Handler) Router() *mux.Router {
+	router := mux.NewRouter()
 	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
 	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", handler.deleteKpi).Methods("DELETE")
+	return router
 }
 
 // FunctionsEntrypoint represents cloud function entry point

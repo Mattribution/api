@@ -3,6 +3,8 @@ package functions
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -155,8 +157,9 @@ func TestNewKpi(t *testing.T) {
 
 	t.Run("NewKPI responds with 400 DATA FORMAT if incorrectly formatted data", func(t *testing.T) {
 		ctrl := gomock.NewController(t)
+		kpis := mock_app.NewMockKpis(ctrl)
 		handler := Handler{
-			Tracks: mock_app.NewMockTracks(ctrl),
+			Kpis: kpis,
 		}
 
 		data := "{"
@@ -218,6 +221,91 @@ func TestNewKpi(t *testing.T) {
 
 		// Execute request
 		httphandler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != expectedStatus {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, expectedStatus)
+		}
+
+		bodyStr := strings.TrimSpace(rr.Body.String())
+		if bodyStr != expectedBody {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bodyStr, expectedBody)
+		}
+
+		ctrl.Finish()
+	})
+}
+
+func TestDeleteKpi(t *testing.T) {
+
+	t.Run("DeleteKPI responds with 500 INTERNAL if db cant make query", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		kpis := mock_app.NewMockKpis(ctrl)
+		handler := Handler{
+			Kpis: kpis,
+		}
+		router := handler.Router()
+
+		id := 1
+		data := "1"
+		expectedStatus := http.StatusInternalServerError
+		expectedBody := internalError
+
+		kpis.EXPECT().Delete(int64(id), int64(0)).Times(1).Return(int64(0), errors.New(""))
+
+		// Compose request
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("/kpis/%s", data), strings.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Create response recorder and http handler
+		rr := httptest.NewRecorder()
+
+		// Execute request
+		router.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != expectedStatus {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, expectedStatus)
+		}
+
+		bodyStr := strings.TrimSpace(rr.Body.String())
+		if bodyStr != expectedBody {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bodyStr, expectedBody)
+		}
+
+		ctrl.Finish()
+	})
+
+	t.Run("DeleteKPI responds with 200 COUNT if deleted", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		kpis := mock_app.NewMockKpis(ctrl)
+		handler := Handler{
+			Kpis: kpis,
+		}
+		router := handler.Router()
+
+		id := 1
+		data := "1"
+		expectedStatus := http.StatusOK
+		expectedBody := data
+
+		kpis.EXPECT().Delete(int64(id), int64(0)).Times(1).Return(int64(1), nil)
+
+		// Compose request
+		req, err := http.NewRequest("DELETE", fmt.Sprintf("/kpis/%s", data), strings.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Create response recorder and http handler
+		rr := httptest.NewRecorder()
+
+		// Execute request
+		router.ServeHTTP(rr, req)
 
 		if status := rr.Code; status != expectedStatus {
 			t.Errorf("handler returned wrong status code: got %v want %v",

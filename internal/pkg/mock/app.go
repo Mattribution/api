@@ -85,3 +85,18 @@ func (mr *MockKpisMockRecorder) Store(kpi interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Store", reflect.TypeOf((*MockKpis)(nil).Store), kpi)
 }
+
+// Delete mocks base method
+func (m *MockKpis) Delete(id, ownerID int64) (int64, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", id, ownerID)
+	ret0, _ := ret[0].(int64)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockKpisMockRecorder) Delete(id, ownerID interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockKpis)(nil).Delete), id, ownerID)
+}
