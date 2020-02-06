@@ -2,12 +2,13 @@ package functions
 
 import (
 	"encoding/base64"
-	"encoding/binary"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"os"
+	"strconv"
 
 	"github.com/gorilla/mux"
 
@@ -23,6 +24,7 @@ type Handler struct {
 const (
 	invalidRequestError        = "The request you sent is invalid. Please reformat the request and try again."
 	invalidBase64EncodingError = "The data sent was not Base64 encoded. Please encode the data and try again."
+	internalError              = "We experienced an internal error. Please try again later."
 )
 
 var (
@@ -65,7 +67,7 @@ func init() {
 
 // FunctionsEntrypoint represents cloud function entry point
 func FunctionsEntrypoint(w http.ResponseWriter, r *http.Request) {
-	mux.ServeHTTP(w, r)
+	router.ServeHTTP(w, r)
 }
 
 // ~=~=~=~=~=~=~=~=
@@ -120,21 +122,21 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 	// Parse body
 	err := json.NewDecoder(r.Body).Decode(&kpi)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, invalidRequestError, http.StatusBadRequest)
+		log.Println(err)
 		return
 	}
 
 	// Store KPI
 	newKpiID, err := h.Kpis.Store(kpi)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
 
 	// Return new ID
+	s := strconv.FormatInt(newKpiID, 10)
 	w.WriteHeader(http.StatusOK)
-	b := make([]byte, 8)
-	binary.LittleEndian.PutUint64(b, uint64(newKpiID))
-	w.Write(b)
+	fmt.Fprintf(w, s)
 }

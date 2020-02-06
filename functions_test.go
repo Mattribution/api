@@ -1,6 +1,7 @@
 package functions
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -160,10 +161,53 @@ func TestNewKpi(t *testing.T) {
 
 		data := "{"
 		expectedStatus := http.StatusBadRequest
-		expectedBody := invalidBase64EncodingError
+		expectedBody := invalidRequestError
 
 		// Compose request
 		req, err := http.NewRequest("POST", "/kpis", strings.NewReader(data))
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		// Create response recorder and http handler
+		rr := httptest.NewRecorder()
+		httphandler := http.HandlerFunc(handler.newKpi)
+
+		// Execute request
+		httphandler.ServeHTTP(rr, req)
+
+		if status := rr.Code; status != expectedStatus {
+			t.Errorf("handler returned wrong status code: got %v want %v",
+				status, expectedStatus)
+		}
+
+		bodyStr := strings.TrimSpace(rr.Body.String())
+		if bodyStr != expectedBody {
+			t.Errorf("handler returned unexpected body: got %v want %v",
+				bodyStr, expectedBody)
+		}
+
+		ctrl.Finish()
+	})
+
+	t.Run("NewKPI responds with 200 ID if correct data sent", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		kpis := mock_app.NewMockKpis(ctrl)
+		handler := Handler{
+			Kpis: kpis,
+		}
+
+		kpi := app.Kpi{
+			Name: "My Kpi",
+		}
+		data, _ := json.Marshal(kpi)
+		expectedStatus := http.StatusOK
+		expectedBody := "1"
+
+		kpis.EXPECT().Store(kpi).Times(1).Return(int64(1), nil)
+
+		// Compose request
+		req, err := http.NewRequest("POST", "/kpis", bytes.NewReader(data))
 		if err != nil {
 			t.Fatal(err)
 		}

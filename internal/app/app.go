@@ -41,5 +41,5 @@ type Tracks interface {
 
 type Kpis interface {
 	Store(kpi Kpi) (int64, error)
-	Delete(int64) (int64, error)
+	// Delete(int64) (int64, error)
 }
