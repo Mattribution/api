@@ -171,7 +171,6 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idString := vars["id"]
 	ownerIDInterface := r.Context().Value(ContextKeyOwnerID)
-	log.Println(ownerIDInterface)
 
 	ownerID, ok := ownerIDInterface.(int64)
 	if !ok {
