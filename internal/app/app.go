@@ -2,6 +2,12 @@ package app
 
 import "time"
 
+type PosAggregate struct {
+	Value    string `json:"value" db:"value"`
+	Position int64  `json:"position" db:"position"`
+	Count    int64  `json:"count" db:"count"`
+}
+
 // Track is event tracking data in our format
 type Track struct {
 	ID              int64     `json:"id" db:"id"`
@@ -36,6 +42,7 @@ type Kpi struct {
 
 type Tracks interface {
 	Store(t Track) (int64, error)
+	GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]PosAggregate, error)
 }
 
 type Kpis interface {

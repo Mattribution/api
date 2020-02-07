@@ -38,7 +38,29 @@ func (s *Tracks) Store(t app.Track) (int64, error) {
 	}
 
 	return id, nil
+}
 
+func (s *Tracks) GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]app.PosAggregate, error) {
+	sqlStatement :=
+		fmt.Sprintf(
+			`SELECT *, count(*)
+		FROM (
+			SELECT %s as value,
+			ROW_NUMBER() OVER (PARTITION BY anonymous_id ORDER BY sent_at) AS position
+			FROM tracks AS t
+			WHERE %s <> ''
+			AND t.sent_at < (SELECT sent_at FROM tracks t2 WHERE t2.%s = '%s' AND t.anonymous_id = t2.anonymous_id)
+		) as tracks
+		GROUP BY position, value
+		ORDER BY position;`, columnName, columnName, conversionColumnName, conversionRowValue)
+
+	var posAggregates []app.PosAggregate
+	err := s.DB.Select(&posAggregates, sqlStatement, ownerID)
+	if err != nil {
+		return nil, err
+	}
+
+	return posAggregates, err
 }
 
 // ~=~=~=~=~=~=~=~=

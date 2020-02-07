@@ -138,6 +138,29 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	w.Write(gif)
 }
 
+func (h *Handler) getTrackJourneyAggregate(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+	columnName := q.Get("column_name")
+
+	ownerIDInterface := r.Context().Value(ContextKeyOwnerID)
+	ownerID, ok := ownerIDInterface.(int64)
+	if !ok {
+		http.Error(w, "owner id error", http.StatusBadRequest)
+		return
+	}
+	// Get aggregate data
+	aggregate, err := h.Tracks.GetNormalizedJourneyAggregate(ownerID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		log.Println("Error collecting aggregate: ", err)
+		return
+	}
+
+	// Write gif back to client
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(aggregate)
+}
+
 // ~=~=~=~=~=~=~=~=
 // Kpis
 // ~=~=~=~=~=~=~=~=
