@@ -38,6 +38,8 @@ type Kpi struct {
 	PatternMatchColumnName string    `json:"column" db:"pattern_match_column_name"`
 	PatternMatchRowValue   string    `json:"value" db:"pattern_match_row_value"`
 	CreatedAt              time.Time `json:"-" db:"created_at"`
+	// Fields that are added on get
+	CampaignNameJourneyAggregate []PosAggregate `json:"campaignNameJourneyAggregate" db:"-"`
 }
 
 type Tracks interface {

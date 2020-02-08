@@ -48,6 +48,21 @@ func (mr *MockTracksMockRecorder) Store(t interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Store", reflect.TypeOf((*MockTracks)(nil).Store), t)
 }
 
+// GetNormalizedJourneyAggregate mocks base method
+func (m *MockTracks) GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]app.PosAggregate, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetNormalizedJourneyAggregate", ownerID, columnName, conversionColumnName, conversionRowValue)
+	ret0, _ := ret[0].([]app.PosAggregate)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetNormalizedJourneyAggregate indicates an expected call of GetNormalizedJourneyAggregate
+func (mr *MockTracksMockRecorder) GetNormalizedJourneyAggregate(ownerID, columnName, conversionColumnName, conversionRowValue interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNormalizedJourneyAggregate", reflect.TypeOf((*MockTracks)(nil).GetNormalizedJourneyAggregate), ownerID, columnName, conversionColumnName, conversionRowValue)
+}
+
 // MockKpis is a mock of Kpis interface
 type MockKpis struct {
 	ctrl     *gomock.Controller

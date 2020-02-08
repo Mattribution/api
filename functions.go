@@ -71,7 +71,7 @@ func init() {
 	router = handler.Router()
 }
 
-func (handler *Handler) AuthMiddleware(next http.Handler) http.Handler {
+func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		ctx = context.WithValue(ctx, ContextKeyOwnerID, mockOwnerID)
@@ -81,13 +81,13 @@ func (handler *Handler) AuthMiddleware(next http.Handler) http.Handler {
 }
 
 // Router generates the routes
-func (handler *Handler) Router() *mux.Router {
+func (h *Handler) Router() *mux.Router {
 	router := mux.NewRouter()
-	router.HandleFunc("/tracks/new", handler.newTrack).Methods("GET")
-	router.HandleFunc("/kpis", handler.newKpi).Methods("POST")
-	router.HandleFunc("/kpis/{id:[0-9]+}", handler.deleteKpi).Methods("DELETE")
-	router.HandleFunc("/kpis", handler.listKpis).Methods("GET")
-	router.Use(handler.AuthMiddleware)
+	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
+	router.HandleFunc("/kpis", h.newKpi).Methods("POST")
+	router.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
+	router.HandleFunc("/kpis", h.listKpis).Methods("GET")
+	router.Use(h.AuthMiddleware)
 	return router
 }
 
@@ -138,28 +138,28 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	w.Write(gif)
 }
 
-func (h *Handler) getTrackJourneyAggregate(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	columnName := q.Get("column_name")
+// func (h *Handler) getTrackJourneyAggregate(w http.ResponseWriter, r *http.Request) {
+// 	q := r.URL.Query()
+// 	columnName := q.Get("column_name")
 
-	ownerIDInterface := r.Context().Value(ContextKeyOwnerID)
-	ownerID, ok := ownerIDInterface.(int64)
-	if !ok {
-		http.Error(w, "owner id error", http.StatusBadRequest)
-		return
-	}
-	// Get aggregate data
-	aggregate, err := h.Tracks.GetNormalizedJourneyAggregate(ownerID)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		log.Println("Error collecting aggregate: ", err)
-		return
-	}
+// 	ownerIDInterface := r.Context().Value(ContextKeyOwnerID)
+// 	ownerID, ok := ownerIDInterface.(int64)
+// 	if !ok {
+// 		http.Error(w, "owner id error", http.StatusBadRequest)
+// 		return
+// 	}
+// 	// Get aggregate data
+// 	aggregate, err := h.Tracks.GetNormalizedJourneyAggregate(ownerID)
+// 	if err != nil {
+// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+// 		log.Println("Error collecting aggregate: ", err)
+// 		return
+// 	}
 
-	// Write gif back to client
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(aggregate)
-}
+// 	// Write gif back to client
+// 	w.Header().Set("Content-Type", "application/json")
+// 	json.NewEncoder(w).Encode(aggregate)
+// }
 
 // ~=~=~=~=~=~=~=~=
 // Kpis
@@ -230,6 +230,18 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
 		return
+	}
+
+	// Get aggregates for the kpi
+	for i, kpi := range kpis {
+		// Get aggregate data
+		aggregate, err := h.Tracks.GetNormalizedJourneyAggregate(kpi.OwnerID, "campaign_name", kpi.PatternMatchColumnName, kpi.PatternMatchRowValue)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			log.Println("Error collecting aggregate: ", err)
+			return
+		}
+		kpis[i].CampaignNameJourneyAggregate = aggregate
 	}
 
 	// Format
