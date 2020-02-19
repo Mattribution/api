@@ -4,11 +4,17 @@ curl --header "Content-Type: application/json" \
   --request POST \
   --data '{"name":"My Kpi", "column": "event", "value": "signup" }' \
   http://us-central1-mattribution.cloudfunctions.net/v1/kpis
+
   
 curl -X GET "http://localhost:3001/tracks/new?data=eyJldmVudCI6ICJwYWdlVmlldyIsICJjYW1wYWlnbk5hbWUiOiAiUGFpZCBTZWFyY2giLCAiYW5vbnltb3VzSWQiOiAiYXNkZiJ9"
 
 
 curl --header "Content-Type: application/json" \
+  --header "authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik5UYzBRa1l5TnpjME1FRkJSRFJDUmtKRU5ERkZRVVpGT0RReU5UWTVOVGN5UXpGQlF6QXpSUSJ9.eyJpc3MiOiJodHRwczovL2RpZXJpY3guYXV0aDAuY29tLyIsInN1YiI6IjE0Ykkxc1hxbzlOaHlDWDR0QjNobE5xR0NSN05vcW9uQGNsaWVudHMiLCJhdWQiOiJodHRwczovL21hdHRyaWJ1dGlvbi9hcGkiLCJpYXQiOjE1ODIwNzI2MTEsImV4cCI6MTU4MjE1OTAxMSwiYXpwIjoiMTRiSTFzWHFvOU5oeUNYNHRCM2hsTnFHQ1I3Tm9xb24iLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.a2mCslBEAAKg3J4_Fofy3dNZ8t-_zjoSXi1jySFktpXklE-cA3H0tpw2yKuA7qjZFQzoCDDSBpVy5WuE3AxFBK98yqAlQjjPoHww7UPoukOh_ujugQmBqlCqGBLNgRMuS1TzzN1317B7lEYrtv4vPGDGaI9tQck1QlqxOAzPTwncZnkTnVJY9QxDbfwvWO1sWvikFE9Ran4evzIZsyvAWq4G2Q42L0Y23W3KjRW3OXRiazsIct7a2rIDwN810-D_3O_smQgrT4o4Kk3Yvz4QD1RBFEseCi9IhO1LJgKXJN22SG565bC2mY4IIGWTame2Hi5HzCBJVrjn3-NrodzFBw" \
   --request POST \
   --data '{"name":"My Kpi", "column": "event", "value": "signup" }' \
   http://localhost:3001/kpis
+
+
+token: 
+eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6Ik5UYzBRa1l5TnpjME1FRkJSRFJDUmtKRU5ERkZRVVpGT0RReU5UWTVOVGN5UXpGQlF6QXpSUSJ9.eyJpc3MiOiJodHRwczovL2RpZXJpY3guYXV0aDAuY29tLyIsInN1YiI6IjE0Ykkxc1hxbzlOaHlDWDR0QjNobE5xR0NSN05vcW9uQGNsaWVudHMiLCJhdWQiOiJodHRwczovL21hdHRyaWJ1dGlvbi9hcGkiLCJpYXQiOjE1ODIwNzI2MTEsImV4cCI6MTU4MjE1OTAxMSwiYXpwIjoiMTRiSTFzWHFvOU5oeUNYNHRCM2hsTnFHQ1I3Tm9xb24iLCJndHkiOiJjbGllbnQtY3JlZGVudGlhbHMifQ.a2mCslBEAAKg3J4_Fofy3dNZ8t-_zjoSXi1jySFktpXklE-cA3H0tpw2yKuA7qjZFQzoCDDSBpVy5WuE3AxFBK98yqAlQjjPoHww7UPoukOh_ujugQmBqlCqGBLNgRMuS1TzzN1317B7lEYrtv4vPGDGaI9tQck1QlqxOAzPTwncZnkTnVJY9QxDbfwvWO1sWvikFE9Ran4evzIZsyvAWq4G2Q42L0Y23W3KjRW3OXRiazsIct7a2rIDwN810-D_3O_smQgrT4o4Kk3Yvz4QD1RBFEseCi9IhO1LJgKXJN22SG565bC2mY4IIGWTame2Hi5HzCBJVrjn3-NrodzFBw

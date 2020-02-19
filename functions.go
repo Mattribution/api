@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -11,6 +12,9 @@ import (
 	"os"
 	"strconv"
 
+	jwtmiddleware "github.com/auth0/go-jwt-middleware"
+	"github.com/codegangsta/negroni"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 
 	"github.com/mattribution/api/internal/app"
@@ -20,6 +24,19 @@ import (
 type Handler struct {
 	Tracks app.Tracks
 	Kpis   app.Kpis
+}
+
+type Jwks struct {
+	Keys []JSONWebKeys `json:"keys"`
+}
+
+type JSONWebKeys struct {
+	Kty string   `json:"kty"`
+	Kid string   `json:"kid"`
+	Use string   `json:"use"`
+	N   string   `json:"n"`
+	E   string   `json:"e"`
+	X5c []string `json:"x5c"`
 }
 
 type ContextKey string
@@ -71,6 +88,36 @@ func init() {
 	router = handler.Router()
 }
 
+func getPemCert(token *jwt.Token, domain string) (string, error) {
+	cert := ""
+	resp, err := http.Get(fmt.Sprintf("https://%s/.well-known/jwks.json", domain))
+
+	if err != nil {
+		return cert, err
+	}
+	defer resp.Body.Close()
+
+	var jwks = Jwks{}
+	err = json.NewDecoder(resp.Body).Decode(&jwks)
+
+	if err != nil {
+		return cert, err
+	}
+
+	for k := range jwks.Keys {
+		if token.Header["kid"] == jwks.Keys[k].Kid {
+			cert = "-----BEGIN CERTIFICATE-----\n" + jwks.Keys[k].X5c[0] + "\n-----END CERTIFICATE-----"
+		}
+	}
+
+	if cert == "" {
+		err := errors.New("Unable to find appropriate key.")
+		return cert, err
+	}
+
+	return cert, nil
+}
+
 func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
@@ -82,9 +129,50 @@ func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
 
 // Router generates the routes
 func (h *Handler) Router() *mux.Router {
+	auth0ApiID := os.Getenv("AUTH0_API_ID")
+	auth0Domain := os.Getenv("AUTH0_DOMAIN")
+
+	// Setup auth0
+	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+			// Verify 'aud' claim
+			aud := auth0ApiID
+			checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
+			if !checkAud {
+				return token, errors.New("Invalid audience")
+			}
+			// Verify 'iss' claim
+			iss := fmt.Sprintf("https://%s/", auth0Domain)
+			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
+			if !checkIss {
+				return token, errors.New("Invalid issuer")
+			}
+
+			cert, err := getPemCert(token, auth0Domain)
+			if err != nil {
+				panic(err.Error())
+			}
+
+			result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+			return result, nil
+		},
+		SigningMethod: jwt.SigningMethodRS256,
+	})
+
 	router := mux.NewRouter()
+	// router.HandleFunc("/tracks/new",
+	// 	negroni.New(
+	// 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext), negroni.Wrap(h.newTrack))).Methods("GET")
+
+	router.Handle("/kpis",
+		negroni.New(
+			negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+			negroni.WrapFunc(h.newKpi),
+		),
+	).Methods("POST")
+
 	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
-	router.HandleFunc("/kpis", h.newKpi).Methods("POST")
+	// router.HandleFunc("/kpis", h.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
 	router.HandleFunc("/kpis", h.listKpis).Methods("GET")
 	router.Use(h.AuthMiddleware)
