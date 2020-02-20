@@ -1,9 +1,5 @@
 package app
 
-import (
-	"errors"
-)
-
 type Service struct {
 	tracksDAO TracksDAO
 	kpisDAO   KpisDAO
@@ -22,7 +18,7 @@ func (s Service) NewTrack(t Track) (int64, error) {
 }
 
 func (s Service) NewKpi(kpi Kpi) (int64, error) {
-	return 0, errors.New("unimplemented")
+	return s.kpisDAO.Store(kpi)
 }
 
 func (s Service) DeleteKpi(kpi Kpi) (int64, error) {
