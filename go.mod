@@ -15,4 +15,6 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.3.0
 	github.com/mroth/weightedrand v0.2.1
+	github.com/smartystreets/goconvey v1.6.4 // indirect
+	github.com/urfave/negroni v1.0.0 // indirect
 )

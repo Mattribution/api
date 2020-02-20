@@ -11,9 +11,9 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
-	"github.com/codegangsta/negroni"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 
@@ -164,18 +164,19 @@ func (h *Handler) Router() *mux.Router {
 	// 	negroni.New(
 	// 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext), negroni.Wrap(h.newTrack))).Methods("GET")
 
-	router.Handle("/kpis",
-		negroni.New(
-			negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
-			negroni.WrapFunc(h.newKpi),
-		),
-	).Methods("POST")
+	// router.Handle("/kpis",
+	// 	negroni.New(
+	// 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
+	// 		negroni.WrapFunc(h.newKpi),
+	// 	),
+	// ).Methods("POST")
 
 	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
-	// router.HandleFunc("/kpis", h.newKpi).Methods("POST")
+	router.HandleFunc("/kpis", h.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
 	router.HandleFunc("/kpis", h.listKpis).Methods("GET")
-	router.Use(h.AuthMiddleware)
+	// router.Use(h.AuthMiddleware)
+	router.Use(jwtMiddleware.Handler)
 	return router
 }
 
@@ -309,7 +310,29 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, s)
 }
 
+type CustomClaims struct {
+	Name string `json:"name"`
+	jwt.StandardClaims
+}
+
 func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
+	authHeaderParts := strings.Split(r.Header.Get("Authorization"), " ")
+	tokenString := authHeaderParts[1]
+
+	token, _ := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		cert, err := getPemCert(token, os.Getenv("AUTH0_DOMAIN"))
+		if err != nil {
+			return nil, err
+		}
+		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
+		return result, nil
+	})
+	claims, ok := token.Claims.(*CustomClaims)
+	fmt.Printf("Claims OK: %+v\n", ok)
+	fmt.Printf("TOKEN: %+v\n", claims.Name)
+
+	user := r.Context().Value("user")
+	fmt.Printf("%+v\n", user)
 	ownerID := r.Context().Value(ContextKeyOwnerID).(int64)
 
 	// Get Kpis
