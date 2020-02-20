@@ -1,7 +1,6 @@
 package functions
 
 import (
-	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -22,8 +21,7 @@ import (
 )
 
 type Handler struct {
-	Tracks app.Tracks
-	Kpis   app.Kpis
+	service app.Service
 }
 
 type Jwks struct {
@@ -50,6 +48,13 @@ const (
 )
 
 var (
+	dbUser      = os.Getenv("DB_USER")
+	dbPass      = os.Getenv("DB_PASS")
+	dbName      = os.Getenv("DB_NAME")
+	dbHost      = os.Getenv("DB_HOST")
+	auth0ApiID  = os.Getenv("AUTH0_API_ID")
+	auth0Domain = os.Getenv("AUTH0_DOMAIN")
+
 	gif = []byte{
 		71, 73, 70, 56, 57, 97, 1, 0, 1, 0, 128, 0, 0, 0, 0, 0,
 		255, 255, 255, 33, 249, 4, 1, 0, 0, 0, 0, 44, 0, 0, 0, 0,
@@ -60,11 +65,6 @@ var (
 )
 
 func init() {
-	dbUser := os.Getenv("DB_USER")
-	dbPass := os.Getenv("DB_PASS")
-	dbName := os.Getenv("DB_NAME")
-	dbHost := os.Getenv("DB_HOST")
-
 	// Setup db connection
 	db, err := postgres.NewCloudSQLClient(dbUser, dbPass, dbName, dbHost)
 	if err != nil {
@@ -74,14 +74,16 @@ func init() {
 	db.SetMaxIdleConns(1)
 	db.SetMaxOpenConns(1)
 
+	tracksDAO := &postgres.TracksDAO{
+		DB: db,
+	}
+	kpisDAO := &postgres.KpisDAO{
+		DB: db,
+	}
+
 	// Setup services
 	handler = &Handler{
-		Tracks: &postgres.Tracks{
-			DB: db,
-		},
-		Kpis: &postgres.Kpis{
-			DB: db,
-		},
+		service: app.NewService(tracksDAO, kpisDAO),
 	}
 
 	// Setup router
@@ -118,19 +120,8 @@ func getPemCert(token *jwt.Token, domain string) (string, error) {
 	return cert, nil
 }
 
-func (h *Handler) AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, ContextKeyOwnerID, mockOwnerID)
-		// Call the next handler, which can be another middleware in the chain, or the final handler.
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
 // Router generates the routes
 func (h *Handler) Router() *mux.Router {
-	auth0ApiID := os.Getenv("AUTH0_API_ID")
-	auth0Domain := os.Getenv("AUTH0_DOMAIN")
 
 	// Setup auth0
 	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
@@ -160,22 +151,10 @@ func (h *Handler) Router() *mux.Router {
 	})
 
 	router := mux.NewRouter()
-	// router.HandleFunc("/tracks/new",
-	// 	negroni.New(
-	// 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext), negroni.Wrap(h.newTrack))).Methods("GET")
-
-	// router.Handle("/kpis",
-	// 	negroni.New(
-	// 		negroni.HandlerFunc(jwtMiddleware.HandlerWithNext),
-	// 		negroni.WrapFunc(h.newKpi),
-	// 	),
-	// ).Methods("POST")
-
 	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
 	router.HandleFunc("/kpis", h.newKpi).Methods("POST")
 	router.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
 	router.HandleFunc("/kpis", h.listKpis).Methods("GET")
-	// router.Use(h.AuthMiddleware)
 	router.Use(jwtMiddleware.Handler)
 	return router
 }
@@ -213,7 +192,7 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	track.IP = ip
 
 	// Store raw track
-	newTrackID, err := h.Tracks.Store(track)
+	newTrackID, err := h.service.NewTrack(track)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println("Error storing track: ", err)
@@ -266,7 +245,7 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Store KPI
-	newKpiID, err := h.Kpis.Store(kpi)
+	newKpiID, err := h.service.NewKpi(kpi)
 	if err != nil {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
@@ -296,8 +275,13 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	kpi := app.Kpi{
+		ID:      id,
+		OwnerID: ownerID,
+	}
+
 	// Delete KPI
-	deleted, err := h.Kpis.Delete(id, ownerID)
+	deleted, err := h.service.DeleteKpi(kpi)
 	if err != nil {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
@@ -337,28 +321,11 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 	ownerID := r.Context().Value(ContextKeyOwnerID).(int64)
 
 	// Get Kpis
-	kpis, err := h.Kpis.FindByOwnerID(ownerID)
+	kpis, err := h.service.GetKpisForUser(ownerID)
 	if err != nil {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
 		return
-	}
-
-	// Get aggregates for the kpi
-	for i, kpi := range kpis {
-		// Get aggregate data
-		aggregate, err := h.Tracks.GetNormalizedJourneyAggregate(kpi.OwnerID, "campaign_name", kpi.PatternMatchColumnName, kpi.PatternMatchRowValue)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			log.Println("Error collecting aggregate: ", err)
-			return
-		}
-		kpis[i].CampaignNameJourneyAggregate = aggregate
-	}
-
-	// Format
-	if kpis == nil {
-		kpis = []app.Kpi{}
 	}
 
 	// Response
