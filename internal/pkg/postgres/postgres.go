@@ -49,6 +49,7 @@ func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID int64, columnName, c
 			ROW_NUMBER() OVER (PARTITION BY anonymous_id ORDER BY sent_at) AS position
 			FROM tracks AS t
 			WHERE %s <> ''
+			AND owner_id = $1
 			AND t.sent_at < (SELECT sent_at FROM tracks t2 WHERE t2.%s = '%s' AND t.anonymous_id = t2.anonymous_id)
 		) as tracks
 		GROUP BY position, value
