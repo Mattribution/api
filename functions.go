@@ -329,6 +329,7 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 	})
 	claims, ok := token.Claims.(*CustomClaims)
 	fmt.Printf("Claims OK: %+v\n", ok)
+	fmt.Printf("Claims: %+v\n", claims)
 	fmt.Printf("TOKEN: %+v\n", claims.Name)
 
 	user := r.Context().Value("user")

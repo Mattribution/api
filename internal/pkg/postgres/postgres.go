@@ -21,7 +21,7 @@ func NewCloudSQLClient(dbUser, dbPass, dbName, dbHost string) (*sqlx.DB, error) 
 // ~=~=~=~=~=~=~=~=
 
 // Tracks handles Track data
-type Tracks struct {
+type TracksDAO struct {
 	DB *sqlx.DB
 }
 
@@ -68,7 +68,7 @@ func (s *Tracks) GetNormalizedJourneyAggregate(ownerID int64, columnName, conver
 // ~=~=~=~=~=~=~=~=
 
 // Kpis handles Kpi data
-type Kpis struct {
+type KpisDAO struct {
 	DB *sqlx.DB
 }
 

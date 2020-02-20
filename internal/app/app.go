@@ -42,12 +42,12 @@ type Kpi struct {
 	CampaignNameJourneyAggregate []PosAggregate `json:"campaignNameJourneyAggregate" db:"-"`
 }
 
-type Tracks interface {
+type TracksDAO interface {
 	Store(t Track) (int64, error)
 	GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]PosAggregate, error)
 }
 
-type Kpis interface {
+type KpisDAO interface {
 	Store(kpi Kpi) (int64, error)
 	FindByOwnerID(ownerID int64) ([]Kpi, error)
 	Delete(id int64, ownerID int64) (int64, error)
