@@ -13,6 +13,11 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+type customClaims struct {
+	UserID string `json:"https://mattribution/claims/uuid"`
+	jwt.StandardClaims
+}
+
 type Jwks struct {
 	Keys []JSONWebKeys `json:"keys"`
 }
@@ -68,7 +73,6 @@ func (h *Handler) newJwtMiddleware() func(http.Handler) http.Handler {
 			}
 			// Verify 'iss' claim
 			iss := fmt.Sprintf("https://%s/", h.auth0Domain)
-			log.Println("Domain: ", h.auth0Domain)
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
 				return token, errors.New(`"Invalid issuer"`)

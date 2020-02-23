@@ -11,7 +11,7 @@ type PosAggregate struct {
 // Track is event tracking data in our format
 type Track struct {
 	ID              int64     `json:"id" db:"id"`
-	OwnerID         int64     `json:"ownerId" db:"owner_id"`
+	OwnerID         string    `json:"ownerId" db:"owner_id"`
 	UserID          string    `json:"userId" db:"user_id"`
 	AnonymousID     string    `json:"anonymousId" db:"anonymous_id"` // fingerprint hash
 	PageURL         string    `json:"pageURL" db:"page_url"`         // optional (website specific)
@@ -31,7 +31,7 @@ type Track struct {
 // Kpi stores rules that can be matched on and recorded as conversions
 type Kpi struct {
 	ID                     int64     `json:"id" db:"id"`
-	OwnerID                int64     `json:"-" db:"owner_id"`
+	OwnerID                string    `json:"-" db:"owner_id"`
 	Name                   string    `json:"name" db:"name"`
 	Target                 int64     `json:"target" db:"target"`
 	DataWasChanged         bool      `json:"-" db:"-"`
@@ -44,11 +44,11 @@ type Kpi struct {
 
 type TracksDAO interface {
 	Store(t Track) (int64, error)
-	GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]PosAggregate, error)
+	GetNormalizedJourneyAggregate(ownerID string, columnName, conversionColumnName, conversionRowValue string) ([]PosAggregate, error)
 }
 
 type KpisDAO interface {
 	Store(kpi Kpi) (int64, error)
-	FindByOwnerID(ownerID int64) ([]Kpi, error)
-	Delete(id int64, ownerID int64) (int64, error)
+	FindByOwnerID(ownerID string) ([]Kpi, error)
+	Delete(id int64, ownerID string) (int64, error)
 }

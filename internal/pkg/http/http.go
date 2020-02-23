@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/mux"
 
 	"github.com/mattribution/api/internal/app"
@@ -38,12 +37,6 @@ type Handler struct {
 	service     app.Service
 	auth0Domain string
 	auth0ApiID  string
-}
-
-type customClaims struct {
-	Name   string `json:"name"`
-	UserID string `json:"sub"`
-	jwt.StandardClaims
 }
 
 func NewHandler(service app.Service, auth0Domain, auth0ApiID string) *Handler {
@@ -142,6 +135,7 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 	var kpi app.Kpi
+	claims := r.Context().Value(contextKeyClaims).(customClaims)
 
 	// Parse body
 	err := json.NewDecoder(r.Body).Decode(&kpi)
@@ -150,6 +144,7 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
+	kpi.OwnerID = claims.UserID
 
 	// Store KPI
 	newKpiID, err := h.service.NewKpi(kpi)
@@ -168,13 +163,7 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idString := vars["id"]
-	ownerIDInterface := r.Context().Value(contextKeyClaims)
-
-	ownerID, ok := ownerIDInterface.(int64)
-	if !ok {
-		http.Error(w, "owner id error", http.StatusBadRequest)
-		return
-	}
+	claims := r.Context().Value(contextKeyClaims).(customClaims)
 
 	id, err := strconv.ParseInt(idString, 10, 64)
 	if err != nil {
@@ -184,7 +173,7 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 
 	kpi := app.Kpi{
 		ID:      id,
-		OwnerID: ownerID,
+		OwnerID: claims.UserID,
 	}
 
 	// Delete KPI
@@ -203,18 +192,16 @@ func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 	claims := r.Context().Value(contextKeyClaims).(customClaims)
-	fmt.Printf("Claims: %+v\n", claims)
-	fmt.Printf("TOKEN: %+v\n", claims.UserID)
-
-	var ownerID int64
 
 	// Get Kpis
-	kpis, err := h.service.GetKpisForUser(ownerID)
+	kpis, err := h.service.GetKpisForUser(claims.UserID)
 	if err != nil {
 		http.Error(w, internalError, http.StatusInternalServerError)
 		log.Println(err)
 		return
 	}
+
+	fmt.Printf("Kpis: %+v\n", kpis)
 
 	// Response
 	w.WriteHeader(http.StatusOK)

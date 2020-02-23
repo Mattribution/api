@@ -25,7 +25,7 @@ func (s Service) DeleteKpi(kpi Kpi) (int64, error) {
 	return s.kpisDAO.Delete(kpi.ID, kpi.OwnerID)
 }
 
-func (s Service) GetKpisForUser(ownerID int64) ([]Kpi, error) {
+func (s Service) GetKpisForUser(ownerID string) ([]Kpi, error) {
 	kpis, err := s.kpisDAO.FindByOwnerID(ownerID)
 	if err != nil {
 		return nil, err

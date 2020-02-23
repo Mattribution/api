@@ -40,7 +40,7 @@ func (dao *TracksDAO) Store(t app.Track) (int64, error) {
 	return id, nil
 }
 
-func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID int64, columnName, conversionColumnName, conversionRowValue string) ([]app.PosAggregate, error) {
+func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID string, columnName, conversionColumnName, conversionRowValue string) ([]app.PosAggregate, error) {
 	sqlStatement :=
 		fmt.Sprintf(
 			`SELECT *, count(*)
@@ -88,7 +88,7 @@ func (dao *KpisDAO) Store(kpi app.Kpi) (int64, error) {
 	return id, nil
 }
 
-func (dao *KpisDAO) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {
+func (dao *KpisDAO) FindByOwnerID(ownerID string) ([]app.Kpi, error) {
 	sqlStatement :=
 		`SELECT * FROM public.kpis 
 		WHERE owner_id = $1`
@@ -103,7 +103,7 @@ func (dao *KpisDAO) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {
 	return kpis, nil
 }
 
-func (dao *KpisDAO) Delete(id int64, ownerID int64) (int64, error) {
+func (dao *KpisDAO) Delete(id int64, ownerID string) (int64, error) {
 	sqlStatement :=
 		`DELETE FROM public.kpis 
 		WHERE id = $1
