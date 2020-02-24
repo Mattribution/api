@@ -17,6 +17,7 @@ import (
 const (
 	invalidRequestError              = "The request you sent is invalid. Please reformat the request and try again."
 	invalidBase64EncodingError       = "The data sent was not Base64 encoded. Please encode the data and try again."
+	invalidJwtError                  = `{"error": "Invalid JWT"}`
 	internalError                    = "We experienced an internal error. Please try again later."
 	authClaimsDecodingError          = "Couldn't decode auth claims."
 	mockOwnerID                int64 = 0
@@ -78,11 +79,13 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	router := mux.NewRouter()
 	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
-	router.HandleFunc("/kpis", h.newKpi).Methods("POST")
-	router.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
-	router.HandleFunc("/kpis", h.listKpis).Methods("GET")
-	router.Use(h.newJwtMiddleware())
-	router.Use(h.addJwtTokenClaimsInContextMiddleware)
+
+	s := router.PathPrefix("/").Subrouter()
+	s.HandleFunc("/kpis", h.newKpi).Methods("POST")
+	s.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
+	s.HandleFunc("/kpis", h.listKpis).Methods("GET")
+	s.Use(h.newJwtMiddleware())
+	s.Use(h.addJwtTokenClaimsInContextMiddleware)
 
 	router.ServeHTTP(w, r)
 }

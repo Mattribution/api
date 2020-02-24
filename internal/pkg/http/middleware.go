@@ -75,7 +75,7 @@ func (h *Handler) newJwtMiddleware() func(http.Handler) http.Handler {
 			iss := fmt.Sprintf("https://%s/", h.auth0Domain)
 			checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
 			if !checkIss {
-				return token, errors.New(`"Invalid issuer"`)
+				return token, fmt.Errorf("Invalid issuer: %s", iss)
 			}
 
 			cert, err := getPemCert(token, h.auth0Domain)
@@ -85,6 +85,10 @@ func (h *Handler) newJwtMiddleware() func(http.Handler) http.Handler {
 
 			result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
 			return result, nil
+		},
+		ErrorHandler: func(w http.ResponseWriter, r *http.Request, err string) {
+			log.Printf("JWT Error: %v", err)
+			http.Error(w, invalidJwtError, 401)
 		},
 		SigningMethod: jwt.SigningMethodRS256,
 	}).Handler
