@@ -24,7 +24,7 @@ const (
 func TestNewTrack(t *testing.T) {
 
 	t.Run("NewTrack responds with 400 BASE 64 ERROR if data is not base64 encoded", func(t *testing.T) {
-		ctrl := gomock.NewController(t)
+		ctrl := gomock.NewConltroller(t)
 		handler := Handler{
 			Tracks: mock_app.NewMockTracks(ctrl),
 		}
