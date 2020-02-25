@@ -32,6 +32,7 @@ type Track struct {
 type Kpi struct {
 	ID                     int64     `json:"id" db:"id"`
 	OwnerID                string    `json:"-" db:"owner_id"`
+	ModelID                string    `json:"modelId" db:"model_id"`
 	Name                   string    `json:"name" db:"name"`
 	Target                 int64     `json:"target" db:"target"`
 	DataWasChanged         bool      `json:"-" db:"-"`
@@ -50,5 +51,6 @@ type TracksDAO interface {
 type KpisDAO interface {
 	Store(kpi Kpi) (int64, error)
 	FindByOwnerID(ownerID string) ([]Kpi, error)
+	Update(kpi Kpi) error
 	Delete(id int64, ownerID string) (int64, error)
 }

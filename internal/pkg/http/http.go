@@ -18,7 +18,7 @@ const (
 	invalidRequestError              = "The request you sent is invalid. Please reformat the request and try again."
 	invalidBase64EncodingError       = "The data sent was not Base64 encoded. Please encode the data and try again."
 	invalidJwtError                  = `{"error": "Invalid JWT"}`
-	internalError                    = "We experienced an internal error. Please try again later."
+	internalError                    = `{"error": "We experienced an internal error. Please try again later."}`
 	authClaimsDecodingError          = "Couldn't decode auth claims."
 	mockOwnerID                int64 = 0
 )
@@ -83,6 +83,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s := router.PathPrefix("/").Subrouter()
 	s.HandleFunc("/kpis", h.newKpi).Methods("POST")
 	s.HandleFunc("/kpis/{id:[0-9]+}", h.deleteKpi).Methods("DELETE")
+	s.HandleFunc("/kpis/{id:[0-9]+}", h.updateKpi).Methods("PUT")
 	s.HandleFunc("/kpis", h.listKpis).Methods("GET")
 	s.Use(h.newJwtMiddleware())
 	s.Use(h.addJwtTokenClaimsInContextMiddleware)
@@ -161,6 +162,31 @@ func (h *Handler) newKpi(w http.ResponseWriter, r *http.Request) {
 	s := strconv.FormatInt(newKpiID, 10)
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintf(w, s)
+}
+
+func (h *Handler) updateKpi(w http.ResponseWriter, r *http.Request) {
+	var kpi app.Kpi
+	claims := r.Context().Value(contextKeyClaims).(customClaims)
+
+	// Parse body
+	err := json.NewDecoder(r.Body).Decode(&kpi)
+	if err != nil {
+		http.Error(w, invalidRequestError, http.StatusBadRequest)
+		log.Println(err)
+		return
+	}
+	kpi.OwnerID = claims.UserID
+
+	// Store KPI
+	err = h.service.UpdateKpi(kpi)
+	if err != nil {
+		http.Error(w, internalError, http.StatusInternalServerError)
+		log.Println(err)
+		return
+	}
+
+	// Response
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {

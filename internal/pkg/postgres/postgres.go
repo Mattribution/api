@@ -111,6 +111,21 @@ func (dao *KpisDAO) FindByOwnerID(ownerID string) ([]app.Kpi, error) {
 	return kpis, nil
 }
 
+func (dao *KpisDAO) Update(kpi app.Kpi) error {
+	sqlStatement :=
+		`UPDATE public.kpis
+		SET target = $1, pattern_match_column_name = $2, pattern_match_row_value = $3, model_id = $4
+		WHERE id = $5
+		AND owner_id = $6`
+
+	_, err := dao.DB.Exec(sqlStatement, kpi.Target, kpi.PatternMatchColumnName, kpi.PatternMatchRowValue, kpi.ModelID, kpi.ID, kpi.OwnerID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (dao *KpisDAO) Delete(id int64, ownerID string) (int64, error) {
 	sqlStatement :=
 		`DELETE FROM public.kpis 
