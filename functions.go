@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	dbUser      = os.Getenv("DB_USER")
-	dbPass      = os.Getenv("DB_PASS")
-	dbName      = os.Getenv("DB_NAME")
-	dbHost      = os.Getenv("DB_HOST")
-	auth0ApiID  = os.Getenv("AUTH0_API_ID")
-	auth0Domain = os.Getenv("AUTH0_DOMAIN")
+	dbUser      = getenv("DB_USER", "postgres")
+	dbPass      = getenv("DB_PASS", "password")
+	dbName      = getenv("DB_NAME", "mattribution")
+	dbHost      = getenv("DB_HOST", "127.0.0.1")
+	auth0ApiID  = getenv("AUTH0_API_ID", "")
+	auth0Domain = getenv("AUTH0_DOMAIN", "")
 	handler     *internal_http.Handler
 )
 
@@ -47,4 +47,12 @@ func init() {
 // FunctionsEntrypoint represents cloud function entry point
 func FunctionsEntrypoint(w http.ResponseWriter, r *http.Request) {
 	handler.ServeHTTP(w, r)
+}
+
+func getenv(key, fallback string) string {
+	value := os.Getenv(key)
+	if len(value) == 0 {
+		return fallback
+	}
+	return value
 }
