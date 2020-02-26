@@ -43,11 +43,12 @@ func (dao *TracksDAO) Store(t app.Track) (int64, error) {
 
 func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID string, columnName, conversionColumnName, conversionRowValue string) ([]app.PosAggregate, error) {
 	sqlStatement :=
-		fmt.Sprintf(
-			`SELECT *, count(*)
+		fmt.Sprintf(`
+		SELECT *, count(*)
 		FROM (
 			SELECT %s as value,
-			ROW_NUMBER() OVER (PARTITION BY anonymous_id ORDER BY sent_at) AS position
+			ROW_NUMBER() OVER (PARTITION BY anonymous_id ORDER BY sent_at) AS position,
+			date_trunc('day', sent_at) AS day
 			FROM tracks AS t
 			WHERE %s <> ''
 			AND owner_id = $1
@@ -60,8 +61,8 @@ func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID string, columnName, 
 				LIMIT 1
 			)
 		) as tracks
-		GROUP BY position, value
-		ORDER BY position;`, columnName, columnName, conversionColumnName, conversionRowValue)
+		GROUP BY position, value, day
+		ORDER BY day;`, columnName, columnName, conversionColumnName, conversionRowValue)
 	log.Println(sqlStatement)
 	var posAggregates []app.PosAggregate
 	err := dao.DB.Select(&posAggregates, sqlStatement, ownerID)
