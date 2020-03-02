@@ -14,15 +14,15 @@ import (
 )
 
 var (
-	dbUser        = getenv("DB_USER", "postgres")
-	dbPass        = getenv("DB_PASS", "password")
-	dbName        = getenv("DB_NAME", "mattribution")
-	dbHost        = getenv("DB_HOST", "127.0.0.1")
-	auth0ApiID    = getenv("AUTH0_API_ID", "")
-	auth0Domain   = getenv("AUTH0_DOMAIN", "")
-	auth0Secret   = getenv("AUTH0_SECRET", "")
-	auth0ClientID = getenv("AUTH0_CLIENT_ID", "")
-	handler       *internal_http.Handler
+	dbUser            = getenv("DB_USER", "postgres")
+	dbPass            = getenv("DB_PASS", "password")
+	dbName            = getenv("DB_NAME", "mattribution")
+	dbHost            = getenv("DB_HOST", "127.0.0.1")
+	auth0ApiID        = getenv("AUTH0_API_ID", "")
+	auth0Domain       = getenv("AUTH0_DOMAIN", "")
+	auth0ClientSecret = getenv("AUTH0_CLIENT_SECRET", "")
+	auth0ClientID     = getenv("AUTH0_CLIENT_ID", "")
+	handler           *internal_http.Handler
 )
 
 func init() {
@@ -36,7 +36,7 @@ func init() {
 	db.SetMaxOpenConns(1)
 
 	// Auth0 connection
-	m, err := management.New(auth0Domain, auth0ClientID, auth0Secret)
+	m, err := management.New(auth0Domain, auth0ClientID, auth0ClientSecret)
 	if err != nil {
 		panic(err)
 	}
