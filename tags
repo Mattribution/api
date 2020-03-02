@@ -30,11 +30,14 @@ Development	Readme.md	/^### Development$/;"	S
 E	internal/pkg/http/middleware.go	/^	E   string   `json:"e"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:string
 EXPECT	internal/pkg/mock/app.go	/^func (m *MockKpis) EXPECT() *MockKpisMockRecorder {$/;"	f	struct:app_mock.MockKpis	typeref:typename:*MockKpisMockRecorder
 EXPECT	internal/pkg/mock/app.go	/^func (m *MockTracks) EXPECT() *MockTracksMockRecorder {$/;"	f	struct:app_mock.MockTracks	typeref:typename:*MockTracksMockRecorder
+Email	internal/app/app.go	/^	Email string `json:"email"`$/;"	m	struct:app.User	typeref:typename:string
 Event	internal/app/app.go	/^	Event           string    `json:"event" db:"event"`$/;"	m	struct:app.Track	typeref:typename:string
 FindByOwnerID	internal/app/app.go	/^	FindByOwnerID(ownerID string) ([]Kpi, error)$/;"	n	interface:app.KpisDAO	typeref:typename:([]Kpi, error)
 FindByOwnerID	internal/pkg/mock/app.go	/^func (m *MockKpis) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {$/;"	f	struct:app_mock.MockKpis	typeref:typename:([]app.Kpi, error)
 FindByOwnerID	internal/pkg/mock/app.go	/^func (mr *MockKpisMockRecorder) FindByOwnerID(ownerID interface{}) *gomock.Call {$/;"	f	struct:app_mock.MockKpisMockRecorder	typeref:typename:*gomock.Call
 FindByOwnerID	internal/pkg/postgres/postgres.go	/^func (dao *KpisDAO) FindByOwnerID(ownerID string) ([]app.Kpi, error) {$/;"	f	struct:postgres.KpisDAO	typeref:typename:([]app.Kpi, error)
+FindBySecret	internal/app/app.go	/^	FindBySecret(string) (*User, error)$/;"	n	interface:app.UsersDAO	typeref:typename:(*User, error)
+FindBySecret	internal/pkg/auth0/auth0.go	/^func (dao *UsersDAO) FindBySecret(secret string) (*app.User, error) {$/;"	f	struct:auth0.UsersDAO	typeref:typename:(*app.User, error)
 FunctionsEntrypoint	functions.go	/^func FunctionsEntrypoint(w http.ResponseWriter, r *http.Request) {$/;"	f	package:functions
 GOPATH	.vscode/settings.json	/^    "GOPATH": "${go.gopath}"$/;"	s	object:terminal.integrated.env.osx
 GenerateMessage	common/utils.go	/^func GenerateMessage() string {$/;"	f	package:common	typeref:typename:string
@@ -63,13 +66,14 @@ MockTracksMockRecorder	internal/pkg/mock/app.go	/^type MockTracksMockRecorder st
 ModelID	internal/app/app.go	/^	ModelID                string    `json:"modelId" db:"model_id"`$/;"	m	struct:app.Kpi	typeref:typename:string
 N	internal/pkg/http/middleware.go	/^	N   string   `json:"n"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:string
 Name	internal/app/app.go	/^	Name                   string    `json:"name" db:"name"`$/;"	m	struct:app.Kpi	typeref:typename:string
+Name	internal/app/app.go	/^	Name string `json:"name"`$/;"	m	struct:app.User	typeref:typename:string
 NewCloudSQLClient	internal/pkg/postgres/postgres.go	/^func NewCloudSQLClient(dbUser, dbPass, dbName, dbHost string) (*sqlx.DB, error) {$/;"	f	package:postgres	typeref:typename:(*sqlx.DB, error)
 NewHandler	internal/pkg/http/http.go	/^func NewHandler(service app.Service, auth0Domain, auth0ApiID string) *Handler {$/;"	f	package:http	typeref:typename:*Handler
 NewKpi	internal/app/service.go	/^func (s Service) NewKpi(kpi Kpi) (int64, error) {$/;"	f	struct:app.Service	typeref:typename:(int64, error)
 NewMockKpis	internal/pkg/mock/app.go	/^func NewMockKpis(ctrl *gomock.Controller) *MockKpis {$/;"	f	package:app_mock	typeref:typename:*MockKpis
 NewMockTracks	internal/pkg/mock/app.go	/^func NewMockTracks(ctrl *gomock.Controller) *MockTracks {$/;"	f	package:app_mock	typeref:typename:*MockTracks
-NewService	internal/app/service.go	/^func NewService(tracksDAO TracksDAO, kpisDAO KpisDAO) Service {$/;"	f	package:app	typeref:typename:Service
-NewTrack	internal/app/service.go	/^func (s Service) NewTrack(t Track) (int64, error) {$/;"	f	struct:app.Service	typeref:typename:(int64, error)
+NewService	internal/app/service.go	/^func NewService(tracksDAO TracksDAO, kpisDAO KpisDAO, usersDAO UsersDAO) Service {$/;"	f	package:app	typeref:typename:Service
+NewTrack	internal/app/service.go	/^func (s Service) NewTrack(t Track, ownerSecret string) (int64, error) {$/;"	f	struct:app.Service	typeref:typename:(int64, error)
 OwnerID	internal/app/app.go	/^	OwnerID                string    `json:"-" db:"owner_id"`$/;"	m	struct:app.Kpi	typeref:typename:string
 OwnerID	internal/app/app.go	/^	OwnerID         string    `json:"ownerId" db:"owner_id"`$/;"	m	struct:app.Track	typeref:typename:string
 PagePath	internal/app/app.go	/^	PagePath        string    `json:"pagePath" db:"page_path"`       \/\/ optional ()$/;"	m	struct:app.Track	typeref:typename:string
@@ -99,12 +103,17 @@ TestNewTrack	functions_test.go	/^func TestNewTrack(t *testing.T) {$/;"	f	package
 Track	internal/app/app.go	/^type Track struct {$/;"	s	package:app
 TracksDAO	internal/app/app.go	/^type TracksDAO interface {$/;"	i	package:app
 TracksDAO	internal/pkg/postgres/postgres.go	/^type TracksDAO struct {$/;"	s	package:postgres
+UUID	internal/app/app.go	/^	UUID string `json:"uuid"`$/;"	m	struct:app.User	typeref:typename:string
 Update	internal/app/app.go	/^	Update(kpi Kpi) error$/;"	n	interface:app.KpisDAO	typeref:typename:error
 Update	internal/pkg/postgres/postgres.go	/^func (dao *KpisDAO) Update(kpi app.Kpi) error {$/;"	f	struct:postgres.KpisDAO	typeref:typename:error
 UpdateKpi	internal/app/service.go	/^func (s Service) UpdateKpi(kpi Kpi) error {$/;"	f	struct:app.Service	typeref:typename:error
 Use	internal/pkg/http/middleware.go	/^	Use string   `json:"use"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:string
+User	internal/app/app.go	/^type User struct {$/;"	s	package:app
 UserID	internal/app/app.go	/^	UserID          string    `json:"userId" db:"user_id"`$/;"	m	struct:app.Track	typeref:typename:string
 UserID	internal/pkg/http/middleware.go	/^	UserID string `json:"https:\/\/mattribution\/claims\/uuid"`$/;"	m	struct:http.customClaims	typeref:typename:string
+UserManager	internal/pkg/auth0/auth0.go	/^	UserManager *management.UserManager$/;"	m	struct:auth0.UsersDAO	typeref:typename:*management.UserManager
+UsersDAO	internal/app/app.go	/^type UsersDAO interface {$/;"	i	package:app
+UsersDAO	internal/pkg/auth0/auth0.go	/^type UsersDAO struct {$/;"	s	package:auth0
 Value	internal/app/app.go	/^	Value    string    `json:"value" db:"value"`$/;"	m	struct:app.PosAggregate	typeref:typename:string
 X5c	internal/pkg/http/middleware.go	/^	X5c []string `json:"x5c"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:[]string
 addJwtTokenClaimsInContextMiddleware	internal/pkg/http/middleware.go	/^func (h *Handler) addJwtTokenClaimsInContextMiddleware(next http.Handler) http.Handler {$/;"	f	unknown:http.Handler	typeref:typename:http.Handler
@@ -112,10 +121,13 @@ app	internal/app/app.go	/^package app$/;"	p
 app	internal/app/service.go	/^package app$/;"	p
 app	internal/pkg/mock/app.go	/^	app "github.com\/mattribution\/api\/internal\/app"$/;"	P	package:github.com/mattribution/api/internal/app
 app_mock	internal/pkg/mock/app.go	/^package app_mock$/;"	p
+auth0	internal/pkg/auth0/auth0.go	/^package auth0$/;"	p
 auth0ApiID	functions.go	/^	auth0ApiID  = getenv("AUTH0_API_ID", "")$/;"	v	package:functions
 auth0ApiID	internal/pkg/http/http.go	/^	auth0ApiID  string$/;"	m	struct:http.Handler	typeref:typename:string
+auth0ClientID	functions.go	/^	auth0ClientID = getenv("AUTH0_CLIENT_ID", "")$/;"	v	package:functions
 auth0Domain	functions.go	/^	auth0Domain = getenv("AUTH0_DOMAIN", "")$/;"	v	package:functions
 auth0Domain	internal/pkg/http/http.go	/^	auth0Domain string$/;"	m	struct:http.Handler	typeref:typename:string
+auth0Secret	functions.go	/^	auth0Secret = getenv("AUTH0_SECRET", "")$/;"	v	package:functions
 authClaimsDecodingError	internal/pkg/http/http.go	/^	authClaimsDecodingError          = "Couldn't decode auth claims."$/;"	c	package:http
 b64	functions_test.go	/^	b64 "encoding\/base64"$/;"	P	package:encoding/base64
 b64	scripts/generateTracks.go	/^	b64 "encoding\/base64"$/;"	P	package:encoding/base64
@@ -173,4 +185,5 @@ storeTrack	scripts/generateTracks.go	/^func storeTrack(t app.Track) {$/;"	f	pack
 terminal.integrated.env.osx	.vscode/settings.json	/^  "terminal.integrated.env.osx": {$/;"	o
 tracksDAO	internal/app/service.go	/^	tracksDAO TracksDAO$/;"	m	struct:app.Service	typeref:typename:TracksDAO
 updateKpi	internal/pkg/http/http.go	/^func (h *Handler) updateKpi(w http.ResponseWriter, r *http.Request) {$/;"	f	struct:http.Handler
+usersDAO	internal/app/service.go	/^	usersDAO UsersDAO$/;"	m	struct:app.Service	typeref:typename:UsersDAO
 wr	scripts/generateTracks.go	/^	wr "github.com\/mroth\/weightedrand"$/;"	P	package:github.com/mroth/weightedrand

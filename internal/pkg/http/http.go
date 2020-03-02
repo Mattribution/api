@@ -72,6 +72,8 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
 	v := r.URL.Query()
 	rawEvent := v.Get("data")
+	secret := v.Get("secret")
+
 	data, err := base64.StdEncoding.DecodeString(rawEvent)
 	if err != nil {
 		http.Error(w, invalidBase64EncodingError, http.StatusBadRequest)
@@ -92,7 +94,7 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	track.IP = ip
 
 	// Store raw track
-	newTrackID, err := h.service.NewTrack(track)
+	newTrackID, err := h.service.NewTrack(track, secret)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println("Error storing track: ", err)

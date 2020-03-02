@@ -9,6 +9,12 @@ type PosAggregate struct {
 	Day      time.Time `json:"day" db:"day"`
 }
 
+type User struct {
+	Name string `json:"name"`
+	Email string `json:"email"`
+	UUID string `json:"uuid"`
+}
+
 // Track is event tracking data in our format
 type Track struct {
 	ID              int64     `json:"id" db:"id"`
@@ -42,6 +48,10 @@ type Kpi struct {
 	CreatedAt              time.Time `json:"-" db:"created_at"`
 	// Fields that are added on get
 	CampaignNameJourneyAggregate []PosAggregate `json:"campaignNameJourneyAggregate" db:"-"`
+}
+
+type UsersDAO interface {
+	FindBySecret(string) (*User, error)
 }
 
 type TracksDAO interface {

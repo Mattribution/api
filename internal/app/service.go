@@ -7,17 +7,26 @@ const (
 type Service struct {
 	tracksDAO TracksDAO
 	kpisDAO   KpisDAO
+	usersDAO UsersDAO
 }
 
 // NewService returns new service object
-func NewService(tracksDAO TracksDAO, kpisDAO KpisDAO) Service {
+func NewService(tracksDAO TracksDAO, kpisDAO KpisDAO, usersDAO UsersDAO) Service {
 	return Service{
 		tracksDAO: tracksDAO,
 		kpisDAO:   kpisDAO,
+		usersDAO: usersDAO,
 	}
 }
 
-func (s Service) NewTrack(t Track) (int64, error) {
+func (s Service) NewTrack(t Track, ownerSecret string) (int64, error) {
+	user, err := s.usersDAO.FindBySecret(ownerSecret)
+	if err != nil {
+		return 0, err
+	}
+
+	t.OwnerID = user.UUID 
+
 	return s.tracksDAO.Store(t)
 }
 

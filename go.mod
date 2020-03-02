@@ -18,5 +18,6 @@ require (
 	github.com/mroth/weightedrand v0.2.1
 	github.com/smartystreets/goconvey v1.6.4 // indirect
 	github.com/urfave/negroni v1.0.0 // indirect
-	gopkg.in/auth0.v1 v1.3.0 // indirect
+	gopkg.in/auth0.v1 v1.3.0
+	gopkg.in/auth0.v3 v3.3.0
 )
