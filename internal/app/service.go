@@ -1,7 +1,7 @@
 package app
 
 const (
-	defaultModelIDValue = "first-touch"
+	DefaultModelIDValue = "first-touch"
 )
 
 type Service struct {
@@ -23,7 +23,7 @@ func (s Service) NewTrack(t Track) (int64, error) {
 
 func (s Service) NewKpi(kpi Kpi) (int64, error) {
 	if kpi.ModelID == "" {
-		kpi.ModelID = defaultModelIDValue
+		kpi.ModelID = DefaultModelIDValue
 	}
 	return s.kpisDAO.Store(kpi)
 }

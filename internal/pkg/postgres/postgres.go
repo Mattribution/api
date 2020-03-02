@@ -84,12 +84,12 @@ type KpisDAO struct {
 
 func (dao *KpisDAO) Store(kpi app.Kpi) (int64, error) {
 	sqlStatement :=
-		`INSERT INTO public.kpis (owner_id, name, target, pattern_match_column_name, pattern_match_row_value,  created_at)
-	VALUES($1, $2, $3, $4, $5, $6)
+		`INSERT INTO public.kpis (owner_id, model_id, name, target, pattern_match_column_name, pattern_match_row_value, created_at)
+	VALUES($1, $2, $3, $4, $5, $6, $7)
 	RETURNING id`
 
 	var id int64
-	err := dao.DB.QueryRow(sqlStatement, kpi.OwnerID, kpi.Name, kpi.Target, kpi.PatternMatchColumnName, kpi.PatternMatchRowValue, time.Now().Format(time.RFC3339)).Scan(&id)
+	err := dao.DB.QueryRow(sqlStatement, kpi.OwnerID, kpi.ModelID, kpi.Name, kpi.Target, kpi.PatternMatchColumnName, kpi.PatternMatchRowValue, time.Now().Format(time.RFC3339)).Scan(&id)
 	if err != nil {
 		return id, err
 	}
