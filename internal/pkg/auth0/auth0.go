@@ -1,36 +1,38 @@
 package auth0
 
 import (
-	"log"
 	"errors"
-	"gopkg.in/auth0.v3/management"
 	"fmt"
+	"log"
+
 	"github.com/mattribution/api/internal/app"
+	"gopkg.in/auth0.v3/management"
 )
 
 type UsersDAO struct {
-	UserManager *management.UserManager
+	Manager *management.Management
 }
 
 func (dao *UsersDAO) FindBySecret(secret string) (*app.User, error) {
-	users, err := dao.UserManager.Search(management.ListOption(management.Query(fmt.Sprintf(`app_metadata.secret:"%s"`, secret))))
+	queryStr := fmt.Sprintf(`app_metadata.secret:"%s"`, secret)
+	query := management.Query(queryStr)
+	users, err := dao.Manager.User.List(query)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if users.Length > 1 {
 		errStr := "Found multiple users for one secret key"
 		// Note: This error is serious af... idk how this could happen
 		log.Println(errStr)
 		return nil, errors.New(errStr)
 	}
-	
+
 	user := users.Users[0]
-	log.Printf("%+v\n", user)
 
 	return &app.User{
-		Name: *user.Name,
+		Name:  *user.Name,
 		Email: *user.Email,
-		UUID: user.AppMetadata["uuid"].(string),
+		UUID:  user.AppMetadata["uuid"].(string),
 	}, nil
 }
