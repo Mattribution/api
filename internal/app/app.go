@@ -10,9 +10,9 @@ type PosAggregate struct {
 }
 
 type User struct {
-	Name string `json:"name"`
+	Name  string `json:"name"`
 	Email string `json:"email"`
-	UUID string `json:"uuid"`
+	UUID  string `json:"uuid"`
 }
 
 // Track is event tracking data in our format
@@ -51,7 +51,7 @@ type Kpi struct {
 }
 
 type UsersDAO interface {
-	FindBySecret(string) (*User, error)
+	FindBySecret(string) ([]User, error)
 }
 
 type TracksDAO interface {
