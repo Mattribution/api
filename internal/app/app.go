@@ -3,9 +3,16 @@ package app
 import "time"
 
 type PosAggregate struct {
-	Value    string `json:"value" db:"value"`
-	Position int64  `json:"position" db:"position"`
-	Count    int64  `json:"count" db:"count"`
+	Value    string    `json:"value" db:"value"`
+	Position int64     `json:"position" db:"position"`
+	Count    int64     `json:"count" db:"count"`
+	Day      time.Time `json:"day" db:"day"`
+}
+
+type User struct {
+	Name  string `json:"name"`
+	Email string `json:"email"`
+	UUID  string `json:"uuid"`
 }
 
 // Track is event tracking data in our format
@@ -43,9 +50,14 @@ type Kpi struct {
 	CampaignNameJourneyAggregate []PosAggregate `json:"campaignNameJourneyAggregate" db:"-"`
 }
 
+type UsersDAO interface {
+	FindBySecret(string) ([]User, error)
+}
+
 type TracksDAO interface {
 	Store(t Track) (int64, error)
 	GetNormalizedJourneyAggregate(ownerID string, columnName, conversionColumnName, conversionRowValue string) ([]PosAggregate, error)
+	// GetNormalizedJourneyDailyAggregate(ownerID string, columnName, conversionColumnName, conversionRowValue string) ()
 }
 
 type KpisDAO interface {

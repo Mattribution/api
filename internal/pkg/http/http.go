@@ -50,33 +50,6 @@ func NewHandler(service app.Service, auth0Domain, auth0ApiID string) *Handler {
 
 // ServeHTTP sets up a router and serves http requests
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	// // Setup auth0
-	// jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-	// 	ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-	// 		// Verify 'aud' claim
-	// 		aud := h.auth0ApiID
-	// 		checkAud := token.Claims.(jwt.MapClaims).VerifyAudience(aud, false)
-	// 		if !checkAud {
-	// 			return token, errors.New("Invalid audience")
-	// 		}
-	// 		// Verify 'iss' claim
-	// 		iss := fmt.Sprintf("https://%s/", h.auth0Domain)
-	// 		checkIss := token.Claims.(jwt.MapClaims).VerifyIssuer(iss, false)
-	// 		if !checkIss {
-	// 			return token, errors.New("Invalid issuer")
-	// 		}
-
-	// 		cert, err := getPemCert(token, h.auth0Domain)
-	// 		if err != nil {
-	// 			panic(err.Error())
-	// 		}
-
-	// 		result, _ := jwt.ParseRSAPublicKeyFromPEM([]byte(cert))
-	// 		return result, nil
-	// 	},
-	// 	SigningMethod: jwt.SigningMethodRS256,
-	// })
-
 	router := mux.NewRouter()
 	router.HandleFunc("/tracks/new", h.newTrack).Methods("GET")
 
@@ -99,6 +72,8 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	// Get pixel data from client
 	v := r.URL.Query()
 	rawEvent := v.Get("data")
+	secret := v.Get("secret")
+
 	data, err := base64.StdEncoding.DecodeString(rawEvent)
 	if err != nil {
 		http.Error(w, invalidBase64EncodingError, http.StatusBadRequest)
@@ -119,7 +94,7 @@ func (h *Handler) newTrack(w http.ResponseWriter, r *http.Request) {
 	track.IP = ip
 
 	// Store raw track
-	newTrackID, err := h.service.NewTrack(track)
+	newTrackID, err := h.service.NewTrack(track, secret)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		log.Println("Error storing track: ", err)
@@ -229,8 +204,6 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		return
 	}
-
-	fmt.Printf("Kpis: %+v\n", kpis)
 
 	// Response
 	w.WriteHeader(http.StatusOK)
