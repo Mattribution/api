@@ -3,6 +3,7 @@ package functions
 import (
 	"net/http"
 	"os"
+	_ "github.com/joho/godotenv/autoload"
 
 	"github.com/mattribution/api/internal/app"
 	internal_http "github.com/mattribution/api/internal/pkg/http"

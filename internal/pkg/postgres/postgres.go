@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/mattribution/api/internal/app"
@@ -63,7 +62,6 @@ func (dao *TracksDAO) GetNormalizedJourneyAggregate(ownerID string, columnName, 
 		) as tracks
 		GROUP BY position, value, day
 		ORDER BY day;`, columnName, columnName, conversionColumnName, conversionRowValue)
-	log.Println(sqlStatement)
 	var posAggregates []app.PosAggregate
 	err := dao.DB.Select(&posAggregates, sqlStatement, ownerID)
 	if err != nil {

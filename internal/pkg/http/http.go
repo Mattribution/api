@@ -203,8 +203,6 @@ func (h *Handler) listKpis(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Kpis: %+v\n", kpis)
-
 	// Response
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")

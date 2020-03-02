@@ -4,9 +4,9 @@ Connect to prod database
 
 ### Local Dev
 Start Locally: 
-
+.env template
 ```
-AUTH0_API_ID=https://mattribution/api \
-AUTH0_DOMAIN=diericx.auth0.com \
+AUTH0_API_ID=\
+AUTH0_DOMAIN=\
 go run cmd/main.go
 ```
