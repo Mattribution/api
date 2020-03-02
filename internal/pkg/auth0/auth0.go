@@ -21,6 +21,10 @@ func (dao *UsersDAO) FindBySecret(secret string) (*app.User, error) {
 		return nil, err
 	}
 
+	if users.Length == 0 {
+		return nil, errors.New("No user was found for that secret")
+	}
+
 	if users.Length > 1 {
 		errStr := "Found multiple users for one secret key"
 		// Note: This error is serious af... idk how this could happen
