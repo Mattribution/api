@@ -14,7 +14,7 @@ import (
 )
 
 type customClaims struct {
-	UserID string `json:"https://mattribution/claims/uuid"`
+	UserID string `json:"https://spendrop/claims/uuid"`
 	jwt.StandardClaims
 }
 

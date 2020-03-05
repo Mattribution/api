@@ -36,8 +36,8 @@ FindByOwnerID	internal/app/app.go	/^	FindByOwnerID(ownerID string) ([]Kpi, error
 FindByOwnerID	internal/pkg/mock/app.go	/^func (m *MockKpis) FindByOwnerID(ownerID int64) ([]app.Kpi, error) {$/;"	f	struct:app_mock.MockKpis	typeref:typename:([]app.Kpi, error)
 FindByOwnerID	internal/pkg/mock/app.go	/^func (mr *MockKpisMockRecorder) FindByOwnerID(ownerID interface{}) *gomock.Call {$/;"	f	struct:app_mock.MockKpisMockRecorder	typeref:typename:*gomock.Call
 FindByOwnerID	internal/pkg/postgres/postgres.go	/^func (dao *KpisDAO) FindByOwnerID(ownerID string) ([]app.Kpi, error) {$/;"	f	struct:postgres.KpisDAO	typeref:typename:([]app.Kpi, error)
-FindBySecret	internal/app/app.go	/^	FindBySecret(string) (*User, error)$/;"	n	interface:app.UsersDAO	typeref:typename:(*User, error)
-FindBySecret	internal/pkg/auth0/auth0.go	/^func (dao *UsersDAO) FindBySecret(secret string) (*app.User, error) {$/;"	f	struct:auth0.UsersDAO	typeref:typename:(*app.User, error)
+FindBySecret	internal/app/app.go	/^	FindBySecret(string) ([]User, error)$/;"	n	interface:app.UsersDAO	typeref:typename:([]User, error)
+FindBySecret	internal/pkg/auth0/auth0.go	/^func (dao *UsersDAO) FindBySecret(secret string) ([]app.User, error) {$/;"	f	struct:auth0.UsersDAO	typeref:typename:([]app.User, error)
 FunctionsEntrypoint	functions.go	/^func FunctionsEntrypoint(w http.ResponseWriter, r *http.Request) {$/;"	f	package:functions
 GOPATH	.vscode/settings.json	/^    "GOPATH": "${go.gopath}"$/;"	s	object:terminal.integrated.env.osx
 GenerateMessage	common/utils.go	/^func GenerateMessage() string {$/;"	f	package:common	typeref:typename:string
@@ -59,6 +59,7 @@ KpisDAO	internal/app/app.go	/^type KpisDAO interface {$/;"	i	package:app
 KpisDAO	internal/pkg/postgres/postgres.go	/^type KpisDAO struct {$/;"	s	package:postgres
 Kty	internal/pkg/http/middleware.go	/^	Kty string   `json:"kty"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:string
 Local Dev	Readme.md	/^### Local Dev$/;"	S
+Manager	internal/pkg/auth0/auth0.go	/^	Manager *management.Management$/;"	m	struct:auth0.UsersDAO	typeref:typename:*management.Management
 MockKpis	internal/pkg/mock/app.go	/^type MockKpis struct {$/;"	s	package:app_mock
 MockKpisMockRecorder	internal/pkg/mock/app.go	/^type MockKpisMockRecorder struct {$/;"	s	package:app_mock
 MockTracks	internal/pkg/mock/app.go	/^type MockTracks struct {$/;"	s	package:app_mock
@@ -66,7 +67,7 @@ MockTracksMockRecorder	internal/pkg/mock/app.go	/^type MockTracksMockRecorder st
 ModelID	internal/app/app.go	/^	ModelID                string    `json:"modelId" db:"model_id"`$/;"	m	struct:app.Kpi	typeref:typename:string
 N	internal/pkg/http/middleware.go	/^	N   string   `json:"n"`$/;"	m	struct:http.JSONWebKeys	typeref:typename:string
 Name	internal/app/app.go	/^	Name                   string    `json:"name" db:"name"`$/;"	m	struct:app.Kpi	typeref:typename:string
-Name	internal/app/app.go	/^	Name string `json:"name"`$/;"	m	struct:app.User	typeref:typename:string
+Name	internal/app/app.go	/^	Name  string `json:"name"`$/;"	m	struct:app.User	typeref:typename:string
 NewCloudSQLClient	internal/pkg/postgres/postgres.go	/^func NewCloudSQLClient(dbUser, dbPass, dbName, dbHost string) (*sqlx.DB, error) {$/;"	f	package:postgres	typeref:typename:(*sqlx.DB, error)
 NewHandler	internal/pkg/http/http.go	/^func NewHandler(service app.Service, auth0Domain, auth0ApiID string) *Handler {$/;"	f	package:http	typeref:typename:*Handler
 NewKpi	internal/app/service.go	/^func (s Service) NewKpi(kpi Kpi) (int64, error) {$/;"	f	struct:app.Service	typeref:typename:(int64, error)
@@ -103,7 +104,7 @@ TestNewTrack	functions_test.go	/^func TestNewTrack(t *testing.T) {$/;"	f	package
 Track	internal/app/app.go	/^type Track struct {$/;"	s	package:app
 TracksDAO	internal/app/app.go	/^type TracksDAO interface {$/;"	i	package:app
 TracksDAO	internal/pkg/postgres/postgres.go	/^type TracksDAO struct {$/;"	s	package:postgres
-UUID	internal/app/app.go	/^	UUID string `json:"uuid"`$/;"	m	struct:app.User	typeref:typename:string
+UUID	internal/app/app.go	/^	UUID  string `json:"uuid"`$/;"	m	struct:app.User	typeref:typename:string
 Update	internal/app/app.go	/^	Update(kpi Kpi) error$/;"	n	interface:app.KpisDAO	typeref:typename:error
 Update	internal/pkg/postgres/postgres.go	/^func (dao *KpisDAO) Update(kpi app.Kpi) error {$/;"	f	struct:postgres.KpisDAO	typeref:typename:error
 UpdateKpi	internal/app/service.go	/^func (s Service) UpdateKpi(kpi Kpi) error {$/;"	f	struct:app.Service	typeref:typename:error
@@ -111,7 +112,6 @@ Use	internal/pkg/http/middleware.go	/^	Use string   `json:"use"`$/;"	m	struct:ht
 User	internal/app/app.go	/^type User struct {$/;"	s	package:app
 UserID	internal/app/app.go	/^	UserID          string    `json:"userId" db:"user_id"`$/;"	m	struct:app.Track	typeref:typename:string
 UserID	internal/pkg/http/middleware.go	/^	UserID string `json:"https:\/\/mattribution\/claims\/uuid"`$/;"	m	struct:http.customClaims	typeref:typename:string
-UserManager	internal/pkg/auth0/auth0.go	/^	UserManager *management.UserManager$/;"	m	struct:auth0.UsersDAO	typeref:typename:*management.UserManager
 UsersDAO	internal/app/app.go	/^type UsersDAO interface {$/;"	i	package:app
 UsersDAO	internal/pkg/auth0/auth0.go	/^type UsersDAO struct {$/;"	s	package:auth0
 Value	internal/app/app.go	/^	Value    string    `json:"value" db:"value"`$/;"	m	struct:app.PosAggregate	typeref:typename:string
@@ -122,12 +122,12 @@ app	internal/app/service.go	/^package app$/;"	p
 app	internal/pkg/mock/app.go	/^	app "github.com\/mattribution\/api\/internal\/app"$/;"	P	package:github.com/mattribution/api/internal/app
 app_mock	internal/pkg/mock/app.go	/^package app_mock$/;"	p
 auth0	internal/pkg/auth0/auth0.go	/^package auth0$/;"	p
-auth0ApiID	functions.go	/^	auth0ApiID  = getenv("AUTH0_API_ID", "")$/;"	v	package:functions
+auth0ApiID	functions.go	/^	auth0ApiID        = getenv("AUTH0_API_ID", "")$/;"	v	package:functions
 auth0ApiID	internal/pkg/http/http.go	/^	auth0ApiID  string$/;"	m	struct:http.Handler	typeref:typename:string
-auth0ClientID	functions.go	/^	auth0ClientID = getenv("AUTH0_CLIENT_ID", "")$/;"	v	package:functions
-auth0Domain	functions.go	/^	auth0Domain = getenv("AUTH0_DOMAIN", "")$/;"	v	package:functions
+auth0ClientID	functions.go	/^	auth0ClientID     = getenv("AUTH0_CLIENT_ID", "")$/;"	v	package:functions
+auth0ClientSecret	functions.go	/^	auth0ClientSecret = getenv("AUTH0_CLIENT_SECRET", "")$/;"	v	package:functions
+auth0Domain	functions.go	/^	auth0Domain       = getenv("AUTH0_DOMAIN", "")$/;"	v	package:functions
 auth0Domain	internal/pkg/http/http.go	/^	auth0Domain string$/;"	m	struct:http.Handler	typeref:typename:string
-auth0Secret	functions.go	/^	auth0Secret = getenv("AUTH0_SECRET", "")$/;"	v	package:functions
 authClaimsDecodingError	internal/pkg/http/http.go	/^	authClaimsDecodingError          = "Couldn't decode auth claims."$/;"	c	package:http
 b64	functions_test.go	/^	b64 "encoding\/base64"$/;"	P	package:encoding/base64
 b64	scripts/generateTracks.go	/^	b64 "encoding\/base64"$/;"	P	package:encoding/base64
@@ -136,10 +136,10 @@ contextKeyClaims	internal/pkg/http/http.go	/^	contextKeyClaims ContextKey = "cla
 ctrl	internal/pkg/mock/app.go	/^	ctrl     *gomock.Controller$/;"	m	struct:app_mock.MockKpis	typeref:typename:*gomock.Controller
 ctrl	internal/pkg/mock/app.go	/^	ctrl     *gomock.Controller$/;"	m	struct:app_mock.MockTracks	typeref:typename:*gomock.Controller
 customClaims	internal/pkg/http/middleware.go	/^type customClaims struct {$/;"	s	package:http
-dbHost	functions.go	/^	dbHost      = getenv("DB_HOST", "127.0.0.1")$/;"	v	package:functions
-dbName	functions.go	/^	dbName      = getenv("DB_NAME", "mattribution")$/;"	v	package:functions
-dbPass	functions.go	/^	dbPass      = getenv("DB_PASS", "password")$/;"	v	package:functions
-dbUser	functions.go	/^	dbUser      = getenv("DB_USER", "postgres")$/;"	v	package:functions
+dbHost	functions.go	/^	dbHost            = getenv("DB_HOST", "127.0.0.1")$/;"	v	package:functions
+dbName	functions.go	/^	dbName            = getenv("DB_NAME", "mattribution")$/;"	v	package:functions
+dbPass	functions.go	/^	dbPass            = getenv("DB_PASS", "password")$/;"	v	package:functions
+dbUser	functions.go	/^	dbUser            = getenv("DB_USER", "postgres")$/;"	v	package:functions
 deleteKpi	internal/pkg/http/http.go	/^func (h *Handler) deleteKpi(w http.ResponseWriter, r *http.Request) {$/;"	f	struct:http.Handler
 deploy	Makefile	/^deploy:$/;"	t
 functions	cmd/main.go	/^	functions "github.com\/mattribution\/api"$/;"	P	package:github.com/mattribution/api
@@ -151,7 +151,7 @@ gif	internal/pkg/http/http.go	/^	gif = []byte{$/;"	v	package:http
 go.gopath	.vscode/settings.json	/^  "go.gopath": "\/Users\/Zac\/.gvm\/pkgsets\/go1.13.7\/github.com-mattribution-api:\/Users\/Zac\//;"	s
 go.inferGopath	.vscode/settings.json	/^  "go.inferGopath": false$/;"	b
 gomock	internal/pkg/mock/app.go	/^	gomock "github.com\/golang\/mock\/gomock"$/;"	P	package:github.com/golang/mock/gomock
-handler	functions.go	/^	handler     *internal_http.Handler$/;"	v	package:functions	typeref:typename:*internal_http.Handler
+handler	functions.go	/^	handler           *internal_http.Handler$/;"	v	package:functions	typeref:typename:*internal_http.Handler
 http	internal/pkg/http/http.go	/^package http$/;"	p
 http	internal/pkg/http/middleware.go	/^package http$/;"	p
 init	functions.go	/^func init() {$/;"	f	package:functions
@@ -185,5 +185,5 @@ storeTrack	scripts/generateTracks.go	/^func storeTrack(t app.Track) {$/;"	f	pack
 terminal.integrated.env.osx	.vscode/settings.json	/^  "terminal.integrated.env.osx": {$/;"	o
 tracksDAO	internal/app/service.go	/^	tracksDAO TracksDAO$/;"	m	struct:app.Service	typeref:typename:TracksDAO
 updateKpi	internal/pkg/http/http.go	/^func (h *Handler) updateKpi(w http.ResponseWriter, r *http.Request) {$/;"	f	struct:http.Handler
-usersDAO	internal/app/service.go	/^	usersDAO UsersDAO$/;"	m	struct:app.Service	typeref:typename:UsersDAO
+usersDAO	internal/app/service.go	/^	usersDAO  UsersDAO$/;"	m	struct:app.Service	typeref:typename:UsersDAO
 wr	scripts/generateTracks.go	/^	wr "github.com\/mroth\/weightedrand"$/;"	P	package:github.com/mroth/weightedrand

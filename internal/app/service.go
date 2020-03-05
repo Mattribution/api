@@ -77,6 +77,9 @@ func (s Service) GetKpisForUser(ownerID string) ([]Kpi, error) {
 		if err != nil {
 			return nil, err
 		}
+		if aggregate == nil {
+			aggregate = []PosAggregate{}
+		}
 		kpis[i].CampaignNameJourneyAggregate = aggregate
 	}
 
